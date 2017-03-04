@@ -42,39 +42,64 @@ const downloadData = swarmUrl => hash =>
   got(rawUrl(swarmUrl)(hash), {encoding: null})
     .then(response => response.body);
 
-// String -> String -> Promise (Map String String)
-//   Gets the routing table of a Swarm address.
-//   Returns a map from paths to addresses.
-const downloadRoutes = swarmUrl => hash => {
+// type Entry = {"type": String, "hash": String}
+// type File = {"type": String, "data": Buffer}
+
+// String -> String -> Promise (Map String Entry)
+//   Solves the manifest of a Swarm address recursively.
+//   Returns a map from full paths to entries.
+const downloadEntries = swarmUrl => hash => {
   const search = hash => path => routes => {
-    const entryContents = entry =>
+
+    // Formats an entry to the Swarm.js type.
+    const format = entry => ({
+      type: entry.contentType,
+      hash: entry.hash});
+
+    // To download a single entry: 
+    //   if type is bzz-manifest, go deeper
+    //   if not, add it to the routing table
+    const downloadEntry = entry => 
       entry.contentType === "application/bzz-manifest+json"
-        ? search(entry.hash)(path + entry.path)(routes)
-        : Q.resolve(impureInsert(path + entry.path)(entry.hash)(routes));
+        ? search (entry.hash) (path + entry.path) (routes)
+        : Q.resolve (impureInsert (path + entry.path) (format(entry)) (routes));
+
+    // Downloads the initial manifest and then each entry.
     return downloadData(swarmUrl)(hash)
       .then(text => JSON.parse(text).entries)
-      .then(entries => Q.reduce(entries.map(entryContents), (a,b) => b));
+      .then(entries => Q.reduce(entries.map(downloadEntry), (a,b) => b));
+
   }
-  return search(hash)("")({});
+  return search (hash) ("") ({});
 }
 
-// String -> String -> Promise (Map String Buffer)
+// String -> String -> Promise (Map String String)
+//   Same as `downloadEntries`, but returns only hashes (no types).
+const downloadRoutes = swarmUrl => hash =>
+  downloadEntries(swarmUrl)(hash)
+    .then(entries => toMap
+      (Object.keys(entries))
+      (Object.keys(entries).map(route => entries[route].hash)));
+
+// String -> String -> Promise (Map String File)
 //   Gets the entire directory tree in a Swarm address.
 //   Returns a promise mapping paths to file contents.
 const downloadDirectory = swarmUrl => hash => 
-  downloadRoutes (swarmUrl) (hash)
-    .then(routingTable => {
-      const paths = Object.keys(routingTable);
-      const hashs = paths.map(path => routingTable[path]);
-      const contents = hashs.map(downloadData(swarmUrl));
-      return Q.all(contents).then(contents => toMap(paths)(contents));
+  downloadEntries (swarmUrl) (hash)
+    .then(entries => {
+      const paths = Object.keys(entries);
+      const hashs = paths.map(path => entries[path].hash);
+      const types = paths.map(path => entries[path].type);
+      const datas = hashs.map(downloadData(swarmUrl));
+      const files = datas => datas.map((data, i) => ({type: types[i], data: data}));
+      return Q.all(datas).then(datas => toMap(paths)(files(datas)));
     });
 
-// String -> String -> Promise String
+// String -> String -> String -> Promise String
 //   Gets the raw contents of a Swarm hash address.  
 //   Returns a promise with the downloaded file path.
 const downloadDataToDisk = swarmUrl => hash => filePath =>
-  files.download(rawUrl(swarmUrl)(hash))(filePath);
+  files.download (rawUrl(swarmUrl)(hash)) (filePath);
 
 // String -> String -> String -> Promise (Map String String)
 //   Gets the entire directory tree in a Swarm address.
@@ -95,40 +120,39 @@ const downloadDirectoryToDisk = swarmUrl => hash => dirPath =>
 // String -> Buffer -> Promise String
 //   Uploads raw data to Swarm. 
 //   Returns a promise with the uploaded hash.
-const uploadData = swarmUrl => contents =>
-  got(`${swarmUrl}/bzzr:/`, {"body": contents})
+const uploadData = swarmUrl => data =>
+  got(`${swarmUrl}/bzzr:/`, {"body": data, "retries": 2})
     .then(response => response.body);
 
-// String -> String -> String -> String -> String -> Promise String
-//   Uploads raw data to the Swarm manifest at a given hash,
-//   under a specific route. 
-//   Returns a promise containing the uploaded hash.
-const uploadToManifest = swarmUrl => hash => route => mimeType => contents =>
-  got.put(`${swarmUrl}/bzz:/${hash}${route}`, {
-    "headers": {"content-type": mimeType},
-    "body": contents})
-    .then(response => response.body);
+// String -> String -> String -> File -> Promise String
+//   Uploads a file to the Swarm manifest at a given hash, under a specific
+//   route. Returns a promise containing the uploaded hash.
+//   FIXME: for some reasons Swarm-Gateways is sometimes returning
+//   error 404 (bad request), so we retry up to 3 times. Why?
+const uploadToManifest = swarmUrl => hash => route => file => {
+  const attempt = n => {
+    const url = `${swarmUrl}/bzz:/${hash}${route}`;
+    const opt = {
+      "headers": {"content-type": file.type},
+      "body": file.data};
+    return got.put(url, opt)
+      .then(response => response.body)
+      .catch(e => n > 0 && attempt (n-1));
+  };
+  return attempt(3);
+};
 
-// String -> Map String Buffer -> Promise String
+// String -> Map String File -> Promise String
 //   Uploads a directory to Swarm. The directory is
-//   represented as a map of routes and raw contents.
+//   represented as a map of routes and files.
 //   A default path is encoded by having a "" route.
 const uploadDirectory = swarmUrl => directory =>
   uploadData(swarmUrl)("{}")
     .then(hash => {
-      const uploadRoute = route => hash => {
-        const contents = directory[route];
-        const mimeType = contents["content-type"] || mimetype.lookup(route);
-        return uploadToManifest(swarmUrl)(hash)(route)(mimeType)(contents);
-      };
-      return Object.keys(directory).reduce(
-        (hash,route) => hash.then(uploadRoute(route)),
-        Q.resolve(hash));
+      const uploadRoute = route => hash => uploadToManifest(swarmUrl)(hash)(route)(directory[route]);
+      const uploadToHash = (hash, route) => hash.then(uploadRoute(route));
+      return Object.keys(directory).reduce(uploadToHash, Q.resolve(hash));
     });
-
-// String -> Nullable String -> Map String Buffer -> Promise String 
-const uploadDirectoryWithDefaultPath = swarmUrl => defaultPath => directory =>
-  uploadDirectory(swarmUrl)(merge(directory)(defaultPath ? {"": directory[defaultPath] || ""} : {}));
 
 // String -> Promise String
 const uploadDataFromDisk = swarmUrl => filePath => 
@@ -136,18 +160,57 @@ const uploadDataFromDisk = swarmUrl => filePath =>
     .then(uploadData(swarmUrl));
 
 // String -> Nullable String -> String -> Promise String
-const uploadDirectoryFromDiskWithDefaultPath = swarmUrl => defaultPath => dirPath =>
+const uploadDirectoryFromDisk = swarmUrl => defaultPath => dirPath =>
   files.directoryTree(dirPath)
-    .then(fullPaths => {
-      const files = Q.all(fullPaths.map(path => fsp.readFile(path)));
-      const paths = Q.resolve(fullPaths.map(path => path.slice(dirPath.length)));
-      return Q.join(paths, files, (paths, files) => toMap (paths) (files))
-    })
-    .then(uploadDirectoryWithDefaultPath(swarmUrl)(defaultPath));
+    .then(fullPaths => Q.all(fullPaths.map(path => fsp.readFile(path))).then(datas => {
+      const paths = fullPaths.map(path => path.slice(dirPath.length));
+      const types = fullPaths.map(path => mimetype.lookup(path) || "text/plain");
+      return toMap (paths) (datas.map((data, i) => ({type: types[i], data: data})));
+    }))
+    .then(directory => merge (defaultPath ? {"": directory[defaultPath]} : {}) (directory))
+    .then(uploadDirectory(swarmUrl));
 
-// String -> String -> Promise String
-const uploadDirectoryFromDisk = swarmUrl => dirPath =>
-  uploadDirectoryFromDiskWithDefaultPath (swarmUrl) (null) (dirPath);
+// String -> Buffer | Map String Buffer | String -> Nullable String -> Promise String
+//   Simplified multi-type upload which calls the correct one based on the
+//   type of the argument given.
+const upload = swarmUrl => pathOrContents => defaultFile => {
+  // Upload raw data (buffer)
+  if (pathOrContents instanceof Buffer) {
+    return uploadData(swarmUrl)(pathOrContents);
+
+  // Upload directory with JSON
+  } else if (pathOrContents instanceof Object) {
+    return uploadDirectory(swarmUrl)(pathOrContents);
+
+  // Upload directory/file from disk
+  } else if (typeof pathOrContents === "string") {
+    const path = pathOrContents;
+    return fsp.lstat(path).then(stat => {
+      return stat.isDirectory()
+        ? uploadDirectoryFromDisk(swarmUrl)(path)(defaultFile)
+        : uploadFileFromDisk(swarmUrl)(path);
+    });
+  }
+
+  return Q.reject(new Error("Bad arguments"));
+}
+
+// String -> String -> Nullable String -> Promise (String | Buffer | Map String Buffer)
+//   Simplified multi-type download which calls the correct function based on
+//   the type of the argument given, and on whether the Swwarm address has a
+//   directory or a file.
+const download = swarmUrl => hash => path =>
+  isDirectory(swarmUrl)(hash).then(isDir => {
+    if (isDir) {
+      return path
+        ? downloadDirectoryToDisk(swarmUrl)(hash)(path)
+        : downloadDirectory(swarmUrl)(hash);
+    } else {
+      return path
+        ? downloadDataToDisk(swarmUrl)(hash)(path)
+        : downloadData(swarmUrl)(hash);
+    }
+  });
 
 // String -> Promise String
 //   Downloads the Swarm binaries into a path. Returns a promise that only
@@ -231,6 +294,7 @@ const stopProcess = process => new Q((resolve, reject) => {
 
 // SwarmSetup -> (SwarmAPI -> Promise ()) -> Promise ()
 //   Receives a Swarm configuration object and a callback function. It then
+//   checks if a local Swarm node is running. If no local Swarm is found, it
 //   downloads the Swarm binaries to the dataDir (if not there), checksums,
 //   starts the Swarm process and calls the callback function with an API
 //   object using the local node. That callback must return a promise which
@@ -239,14 +303,18 @@ const stopProcess = process => new Q((resolve, reject) => {
 //   user is done with the API and the Swarm process is closed.
 //   TODO: check if Swarm process is already running (improve `isAvailable`)
 const local = swarmSetup => useAPI =>
-  downloadBinary(path.join(swarmSetup.dataDir, "bin", "swarm"))
-    .then(() => startProcess(swarmSetup))
-    .then(process => useAPI(at("http://localhost:8500")).then(() => process))
-    .then(stopProcess);
-
+  isAvailable("http://localhost:8500").then(isAvailable =>
+    isAvailable
+      ? useAPI(at("http://localhost:8500")).then(() => {})
+      : downloadBinary(path.join(swarmSetup.dataDir, "bin", "swarm"))
+        .then(() => startProcess(swarmSetup))
+        .then(process => useAPI(at("http://localhost:8500")).then(() => process))
+        .then(stopProcess));
+      
 // String ~> Promise Bool
 //   Returns true if Swarm is available on `url`.
-//   TODO: too slow; can this be improved?
+//   Perfoms a test upload to determine that.
+//   TODO: improve this?
 const isAvailable = swarmUrl => {
   const testFile = "test";
   const testHash = "c9a99c7d326dcc6316f32fe2625b311f6dc49a175e6877681ded93137d3569e7";
@@ -255,43 +323,67 @@ const isAvailable = swarmUrl => {
     .catch(() => false);
 };
 
+// String -> String ~> Promise Bool
+//   Returns a Promise which is true if that Swarm address is a directory.
+//   Determines that by checking that it (i) is a JSON, (ii) has a .entries.
+//   TODO: improve this?
+const isDirectory = swarmUrl => hash =>
+  downloadData(swarmUrl)(hash)
+    .then(data => !!JSON.parse(data.toString()).entries)
+    .catch(() => false);
+
+// Uncurries a function; used to allow the f(x,y,z) style on exports.
+const uncurry = f => (a,b,c,d,e) => {
+  // Hardcoded because efficiency (`arguments` is very slow).
+  if (typeof a !== "undefined") f = f(a);
+  if (typeof b !== "undefined") f = f(b);
+  if (typeof c !== "undefined") f = f(c);
+  if (typeof d !== "undefined") f = f(d);
+  if (typeof e !== "undefined") f = f(e);
+  return f;
+};
+
 // () -> Promise Bool
 //   Not sure how to mock Swarm to test it properly. Ideas?
 const test = () => Q.resolve(true);
 
 // String -> SwarmAPI
+//   Fixes the `swarmUrl`, returning an API where you don't have to pass it.
 const at = swarmUrl => ({
-  downloadData: downloadData(swarmUrl),
-  downloadDataToDisk: downloadDataToDisk(swarmUrl),
-  downloadDirectory: downloadDirectory(swarmUrl),
-  downloadDirectoryToDisk: downloadDirectoryToDisk(swarmUrl),
-  downloadRoutes: downloadRoutes(swarmUrl),
+  download: (hash,path) => download(swarmUrl)(hash)(path),
+  downloadData: uncurry(downloadData(swarmUrl)),
+  downloadDataToDisk: uncurry(downloadDataToDisk(swarmUrl)),
+  downloadDirectory: uncurry(downloadDirectory(swarmUrl)),
+  downloadDirectoryToDisk: uncurry(downloadDirectoryToDisk(swarmUrl)),
+  downloadRoutes: uncurry(downloadRoutes(swarmUrl)),
+  downloadEntries: uncurry(downloadEntries(swarmUrl)),
   isAvailable: () => isAvailable(swarmUrl),
-  uploadData: uploadData(swarmUrl),
-  uploadDataFromDisk: uploadDataFromDisk(swarmUrl),
-  uploadDirectory: uploadDirectory(swarmUrl),
-  uploadDirectoryFromDisk: uploadDirectoryFromDisk(swarmUrl),
-  uploadDirectoryFromDiskWithDefaultPath: uploadDirectoryFromDiskWithDefaultPath(swarmUrl),
-  uploadToManifest: uploadToManifest(swarmUrl),
+  upload: (pathOrContents,defaultFile) => upload(swarmUrl)(pathOrContents)(defaultFile),
+  uploadData: uncurry(uploadData(swarmUrl)),
+  uploadDataFromDisk: uncurry(uploadDataFromDisk(swarmUrl)),
+  uploadDirectory: uncurry(uploadDirectory(swarmUrl)),
+  uploadDirectoryFromDisk: uncurry(uploadDirectoryFromDisk(swarmUrl)),
+  uploadToManifest: uncurry(uploadToManifest(swarmUrl)),
 });
 
 module.exports = {
   at,
-  local,
+  download,
   downloadBinary,
   downloadData,
   downloadDataToDisk,
   downloadDirectory,
   downloadDirectoryToDisk,
   downloadRoutes,
+  downloadEntries,
   isAvailable,
+  local,
   startProcess,
   stopProcess,
+  upload,
   uploadData,
   uploadDataFromDisk,
   uploadDirectory,
   uploadDirectoryFromDisk,
-  uploadDirectoryFromDiskWithDefaultPath,
   uploadToManifest,
 };
-

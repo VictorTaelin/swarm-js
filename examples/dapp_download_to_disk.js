@@ -7,6 +7,6 @@ const path = require("path");
 const exampleDAppHash = "8587c8e716bfceea12a7306d85a8a8ccad5019020916eb5a21fa47a7f1826891";
 const targetDirPath = path.join(__dirname,"example_dapp");
 
-swarm.downloadDirectoryToDisk(exampleDAppHash)(targetDirPath)
+swarm.download(exampleDAppHash, targetDirPath)
   .then(dirPath => console.log(`Downloaded DApp to ${dirPath}.`))
   .catch(console.log);

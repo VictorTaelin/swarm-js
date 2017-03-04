@@ -1,8 +1,8 @@
 // Uploads raw data to the Swarm network. 
-// Outputs the Swarm address: a5c10851ef054c268a2438f10a21f6efe3dc3dcdcc2ea0e6a1a7a38bf8c91e23
+// Outputs the Swarm address: c9a99c7d326dcc6316f32fe2625b311f6dc49a175e6877681ded93137d3569e7
 
 const swarm = require("./../swarm.js").at("http://swarm-gateways.net");
 
-swarm.uploadData("test string")
+swarm.upload(new Buffer("test"))
   .then(console.log)
   .catch(console.log);

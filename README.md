@@ -22,7 +22,7 @@ This library allows you to interact with the Swarm network from JavaScript. It:
 
 ## Basic usage
 
-The simplest use case for Swarm is uploading/downloading raw data and directories.
+The simplest use case for Swarm is uploading/downloading raw data and directories. First, load the lib:
 
 ```javascript
 // Loads the Swarm API pointing to the official gateway
@@ -31,44 +31,52 @@ const swarm = require("swarm-js").at("http://swarm-gateways.net");
 
 #### Upload raw data
 
+To upload raw data, just call `swarm.upload(buffer)`. It returns a promise with the uploaded hash.
+
 ```javascript
 const file = "test file";
-swarm.uploadData(new Buffer(file)).then(hash => {
+swarm.upload(new Buffer(file)).then(hash => {
   console.log("Uploaded file. Address:", hash);
 })
 ```
 
 #### Downlod raw data
 
+To download raw data, just call `swarm.download(hash)`. It returns a promise with the data buffer.
+
 ```javascript
 const fileHash = "a5c10851ef054c268a2438f10a21f6efe3dc3dcdcc2ea0e6a1a7a38bf8c91e23";
-swarm.downloadData(fileHash).then(buffer => {
+swarm.download(fileHash).then(buffer => {
   console.log("Downloaded file:", buffer.toString());
 });
 ```
 
 #### Upload a directory
 
+To upload a directory, just call `swarm.upload(directory)`, where directory is an object mapping paths to entries, those containing a mime-type and the data (a buffer).
+
 ```javascript
 const dir = {
-  "/foo.txt": "sample file",
-  "/bar.txt": "another file"
+  "/foo.txt": {type: "text/plain", data: new Buffer("sample file")},
+  "/bar.txt": {type: "text/plain", data: new Buffer("another file")}
 };
-swarm.uploadDirectory(dir).then(hash => {
+swarm.upload(dir).then(hash => {
   console.log("Uploaded directory. Address:", hash);
 });
 ```
 
 #### Download a directory
 
+To dowwnload a directory, just call `swarm.download(hash)`. Swarm.js will return a directory instead of a buffer by detecting the existence of a manifest on that hash.
+
 ```javascript
 const dirHash = "7e980476df218c05ecfcb0a2ca73597193a34c5a9d6da84d54e295ecd8e0c641";
-swarm.downloadDirectory(dirHash).then(dir => {
+swarm.download(dirHash).then(dir => {
   console.log("Downloaded directory:");
   for (let path in dir) {
-    console.log("-", path, ":", dir[path].toString());
+    console.log("-", path, ":", dir[path].data.toString());
   }
-}
+});
 ```
 
 For examples of how to upload/download from disk, please check the [`examples`](https://github.com/MaiaVictor/swarm-js/tree/master/examples) directory.
@@ -92,14 +100,14 @@ const indexHtml =
 (...)
 
 const exampleDApp = {
-  ""                     : indexHtml,
-  "/index.html"          : indexHtml,
-  "/ethereum_icon.png"   : ethereumIconPng,
-  "/foo/test_text_1.txt" : testText1,
-  "/foo/test_text_2.txt" : testText2
+  ""                     : {type: "text/html", data: indexHtml},
+  "/index.html"          : {type: "text/html", data: indexHtml},
+  "/ethereum_icon.png"   : {type: "image/png", data: ethereumIconPng},
+  "/foo/test_text_1.txt" : {type: "text/plain", data: testText1},
+  "/foo/test_text_2.txt" : {type: "text/plain", data: testText2}
 }
 
-swarm.uploadDirectory(exampleDApp)
+swarm.upload(exampleDApp)
   .then(console.log)
   .catch(console.log);
 ```
@@ -131,7 +139,7 @@ const config = {
 Swarm.local(config, swarm => new Promise((resolve, reject) => {
 
   // Uploads data using the local node
-  swarm.uploadData("test").then(hash => {
+  swarm.upload(new Buffer("test")).then(hash => {
     console.log("Uploaded data. Address:", hash);
 
     // Closes the Swarm process.

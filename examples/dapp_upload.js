@@ -1,9 +1,9 @@
 // This uploads a DApp to the Swarm network *without* using the filesystem.
 // That allows a web application running on the browser to upload any DApp.
 // Outputs the DApp address. In this case, it is:
-// 8587c8e716bfceea12a7306d85a8a8ccad5019020916eb5a21fa47a7f1826891
+// 379d2791624c3e3719bb28f7bfa362cc9c726ec06482b5800c8e3cefaf2b7bcf
 // You can access it at:
-// http://swarm-gateways.net/bzz:/8587c8e716bfceea12a7306d85a8a8ccad5019020916eb5a21fa47a7f1826891/
+// http://swarm-gateways.net/bzz:/379d2791624c3e3719bb28f7bfa362cc9c726ec06482b5800c8e3cefaf2b7bcf/
 
 const swarm = require("./../swarm.js").at("http://swarm-gateways.net");
 
@@ -49,16 +49,16 @@ const testText2 = "test text #2";
 // The DApp is just an object mapping routes to contents, which can be either
 // strings or buffers. Mime types are inferred from the extension. You can also
 // force them by using `{"type": "application/json", "content": "[1,2,3]"}`, for
-// example. Notice the empty route also poiting to index.html.
+// example. Notice the empty route also pointing to index.html.
 const exampleDApp = {
-  ""                     : indexHtml,
-  "/index.html"          : indexHtml,
-  "/ethereum_icon.png"   : ethereumIconPng,
-  "/foo/test_text_1.txt" : testText1,
-  "/foo/test_text_2.txt" : testText2
+  ""                     : {type: "text/html", data: indexHtml},
+  "/index.html"          : {type: "text/html", data: indexHtml},
+  "/ethereum_icon.png"   : {type: "image/png", data: ethereumIconPng},
+  "/foo/test_text_1.txt" : {type: "text/plain", data: testText1},
+  "/foo/test_text_2.txt" : {type: "text/plain", data: testText2}
 }
 
 // Now we just upload it.
-swarm.uploadDirectory(exampleDApp)
+swarm.upload(exampleDApp)
   .then(console.log)
   .catch(console.log);

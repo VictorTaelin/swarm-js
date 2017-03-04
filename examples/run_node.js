@@ -12,14 +12,16 @@ const config = {
 // Magically starts a local Swarm node
 // Downloads binaries if necessary
 Swarm.local(config)(swarm => new Promise((resolve, reject) => {
+  console.log("running");
+  console.log(swarm);
 
   // Uploads data using the local node
-  swarm.uploadData("test").then(hash => {
+  swarm.upload(new Buffer("test")).then(hash => {
     console.log("Uploaded data. Address:", hash);
 
     // Closes the Swarm process.
     resolve();
   });
 
-})).then(() => console.log("Done!"));
-
+}))
+.then(() => console.log("Done!"));
