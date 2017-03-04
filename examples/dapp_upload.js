@@ -8,14 +8,14 @@
 const swarm = require("./../swarm.js").at("http://swarm-gateways.net");
 
 // The contents of index.html.
-const indexHtml =
+const indexHtml = new Buffer(
 `<html>
   <body>
     <h3><img src="ethereum_icon.png"/> Swarm.js example DApp</h3>
     <p><a href="foo/test_text_1.txt">Test #1</a></p>
     <p><a href="foo/test_text_2.txt">Test #2</a></p>
   </body>
-</html>`;
+</html>`);
 
 // For binary data, we can just use a buffer.
 // This is a 16x16 Ethereum icon png.
@@ -41,10 +41,10 @@ const ethereumIconPng = new Buffer([
   0x57,0x23,0xc8,0x42,0x00,0x00,0x00,0x00,0x49,0x45,0x4e,0x44,0xae,0x42,0x60,0x82]);
 
 // Some test .txt file.
-const testText1 = "test text #1";
+const testText1 = new Buffer("test text #1");
 
 // Other test .txt file.
-const testText2 = "test text #2";
+const testText2 = new Buffer("test text #2");
 
 // The DApp is just an object mapping routes to contents, which can be either
 // strings or buffers. Mime types are inferred from the extension. You can also

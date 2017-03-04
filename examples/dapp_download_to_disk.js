@@ -4,7 +4,7 @@ const swarm = require("./../swarm.js").at("http://swarm-gateways.net");
 const path = require("path");
 
 // The hash of the DApp we uploaded on the other example.
-const exampleDAppHash = "8587c8e716bfceea12a7306d85a8a8ccad5019020916eb5a21fa47a7f1826891";
+const exampleDAppHash = "379d2791624c3e3719bb28f7bfa362cc9c726ec06482b5800c8e3cefaf2b7bcf";
 const targetDirPath = path.join(__dirname,"example_dapp");
 
 swarm.download(exampleDAppHash, targetDirPath)

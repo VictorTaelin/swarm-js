@@ -114,9 +114,9 @@ swarm.upload(exampleDApp)
 
 When you run that script, it outputs a hash. You can then use that hash to access the uploaded DApp, by either using a Swarm-enabled browser such as Mist, or through a gateway. That demo DApp is live and can be accessed:
 
-- If your browser recognizes Swarm, [click here](bzz:/8587c8e716bfceea12a7306d85a8a8ccad5019020916eb5a21fa47a7f1826891).
+- If your browser recognizes Swarm, [click here](bzz://379d2791624c3e3719bb28f7bfa362cc9c726ec06482b5800c8e3cefaf2b7bcf/).
 
-- If you are in a conventional browser, [click here](http://swarm-gateways.net/bzz:/8587c8e716bfceea12a7306d85a8a8ccad5019020916eb5a21fa47a7f1826891/).
+- If you are in a conventional browser, [click here](http://swarm-gateways.net/bzz:/379d2791624c3e3719bb28f7bfa362cc9c726ec06482b5800c8e3cefaf2b7bcf/).
 
 ## Running a local node
 
