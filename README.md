@@ -16,7 +16,7 @@ This library allows you to interact with the Swarm network from JavaScript. It:
 
 - Can automatically download the Swarm binaries safely and administer the local node for you.
 
-[Live demo!](http://swarm-gateways.net/bzz:/162a33641dcf0c065b732aed9070ec8035a1a036a3ea69f65786da6b1f2986ca/)
+[Live demo!](http://swarm-gateways.net/bzz:/aa9dd4d23e105d0a2e62da38544112468372cd5ad038fbdc9874b1f51b8e76f2/)
 
 ## Installing
 
