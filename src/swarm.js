@@ -6,6 +6,7 @@ const got = require("got");
 const mimetype = require('mimetype');
 const path = require("path");
 const {spawn} = require("child_process");
+const pick = require("./pick.js");
 
 // ∀ a . String -> JSON -> Map String a -o Map String a
 //   Inserts a key/val pair in an object impurely.
@@ -131,7 +132,8 @@ const uploadData = swarmUrl => data =>
 //   error 404 (bad request), so we retry up to 3 times. Why?
 const uploadToManifest = swarmUrl => hash => route => file => {
   const attempt = n => {
-    const url = `${swarmUrl}/bzz:/${hash}${route}`;
+    const slashRoute = route[0] === "/" ? route : "/" + route;
+    const url = `${swarmUrl}/bzz:/${hash}${slashRoute}`;
     const opt = {
       "headers": {"content-type": file.type},
       "body": file.data};
@@ -170,12 +172,20 @@ const uploadDirectoryFromDisk = swarmUrl => defaultPath => dirPath =>
     .then(directory => merge (defaultPath ? {"": directory[defaultPath]} : {}) (directory))
     .then(uploadDirectory(swarmUrl));
 
-// String -> Buffer | Map String Buffer | String -> Nullable String -> Promise String
-//   Simplified multi-type upload which calls the correct one based on the
-//   type of the argument given.
+// String -> Buffer | Bool | Map String Buffer | String -> Nullable String -> Promise String
+//   Simplified multi-type upload which calls the correct
+//   one based on the type of the argument given.
 const upload = swarmUrl => pathOrContents => defaultFile => {
+  // Upload a file from browser
+  if (!pathOrContents) {
+    return pick.file().then(uploadData(swarmUrl));
+
+  // Upload a directory from browser
+  } else if (pathOrContents === true) {
+    return pick.directory().then(uploadDirectory(swarmUrl));
+
   // Upload raw data (buffer)
-  if (pathOrContents instanceof Buffer) {
+  } else if (pathOrContents.length) {
     return uploadData(swarmUrl)(pathOrContents);
 
   // Upload directory with JSON
@@ -355,8 +365,8 @@ const at = swarmUrl => ({
   downloadDataToDisk: uncurry(downloadDataToDisk(swarmUrl)),
   downloadDirectory: uncurry(downloadDirectory(swarmUrl)),
   downloadDirectoryToDisk: uncurry(downloadDirectoryToDisk(swarmUrl)),
-  downloadRoutes: uncurry(downloadRoutes(swarmUrl)),
   downloadEntries: uncurry(downloadEntries(swarmUrl)),
+  downloadRoutes: uncurry(downloadRoutes(swarmUrl)),
   isAvailable: () => isAvailable(swarmUrl),
   upload: (pathOrContents,defaultFile) => upload(swarmUrl)(pathOrContents)(defaultFile),
   uploadData: uncurry(uploadData(swarmUrl)),
@@ -364,20 +374,21 @@ const at = swarmUrl => ({
   uploadDirectory: uncurry(uploadDirectory(swarmUrl)),
   uploadDirectoryFromDisk: uncurry(uploadDirectoryFromDisk(swarmUrl)),
   uploadToManifest: uncurry(uploadToManifest(swarmUrl)),
+  pick: pick,
 });
 
 module.exports = {
   at,
+  local,
   download,
   downloadBinary,
   downloadData,
   downloadDataToDisk,
   downloadDirectory,
   downloadDirectoryToDisk,
-  downloadRoutes,
   downloadEntries,
+  downloadRoutes,
   isAvailable,
-  local,
   startProcess,
   stopProcess,
   upload,
@@ -386,4 +397,16 @@ module.exports = {
   uploadDirectory,
   uploadDirectoryFromDisk,
   uploadToManifest,
+  pick,
+};
+
+if (typeof window !== "undefined") {
+  const loadLibs = () => {
+    Swarm = module.exports;
+    require("setimmediate");
+    window.Buffer = require("buffer/").Buffer
+    window.pick = pick;
+  };
+  loadLibs();
+  setTimeout(loadLibs, 0);
 };

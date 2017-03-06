@@ -5,7 +5,7 @@
 // You can access it at:
 // http://swarm-gateways.net/bzz:/379d2791624c3e3719bb28f7bfa362cc9c726ec06482b5800c8e3cefaf2b7bcf/
 
-const swarm = require("./../swarm.js").at("http://swarm-gateways.net");
+const swarm = require("./../src/swarm.js").at("http://swarm-gateways.net");
 
 // The contents of index.html.
 const indexHtml = new Buffer(

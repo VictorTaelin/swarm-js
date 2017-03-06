@@ -1,4 +1,4 @@
-const swarm = require("./../swarm.js").at("http://swarm-gateways.net");
+const swarm = require("./../src/swarm.js").at("http://swarm-gateways.net");
 
 // Uploading raw data
 const file = "test file";

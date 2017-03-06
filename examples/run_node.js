@@ -1,4 +1,4 @@
-const Swarm = require("./../swarm.js");
+const Swarm = require("./../src/swarm.js");
 
 // To run Swarm locally, you need a running Geth
 // node and an Ethereum account/password

@@ -4,16 +4,22 @@
   "description": "Swarm tools for JavaScript.",
   "main": "swarm.js",
   "scripts": {
+    "bundle": "browserify -d src/swarm.js > examples/example_dapp_uploader/swarm.min.js",
+    "minify": "ccjs examples/example_dapp_uploader/swarm.min.js > examples/example_dapp_uploader/swarm.min.js_; mv examples/example_dapp_uploader/swarm.min.js_ examples/example_dapp_uploader/swarm.min.js",
+    "build": "npm run bundle; npm run minify",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "MaiaVictor",
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.4.7",
+    "buffer": "^5.0.5",
     "fs-promise": "^2.0.0",
     "got": "^6.7.1",
     "mimetype": "0.0.8",
     "mkdirp-promise": "^5.0.1",
+    "mock-fs": "^4.1.0",
+    "setimmediate": "^1.0.5",
     "tar.gz": "^1.0.5"
   }
 }
