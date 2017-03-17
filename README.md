@@ -81,7 +81,28 @@ swarm.download(dirHash).then(dir => {
 });
 ```
 
-For examples of how to upload/download from disk, please check the [`examples`](https://github.com/MaiaVictor/swarm-js/tree/master/examples) directory.
+
+#### Download a file/directory to disk (on Node.js)
+
+```javascript
+swarm.download(dappHash, "/target/dir")
+  .then(dirPath => console.log(`Downloaded DApp to ${dirPath}.`))
+  .catch(console.log);
+```
+
+#### Upload a file/directory from disk (on Node.js)
+
+```javascript
+swarm.upload("/path/to/file/or/dir", "/optional_default_file.xyz")
+  .then(console.log)
+  .catch(console.log);
+```
+
+#### Upload a file/directory from disk (on Browser)
+
+```javascript
+swarm.upload(isDapp) // uploads file if isDapp === false, otherwise uploads directory
+```
 
 ## Uploading an Ethereum DApp
 

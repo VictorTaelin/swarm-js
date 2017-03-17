@@ -185,7 +185,7 @@ const upload = swarmUrl => pathOrContents => defaultFile => {
     return pick.directory().then(uploadDirectory(swarmUrl));
 
   // Upload raw data (buffer)
-  } else if (pathOrContents.length) {
+  } else if (pathOrContents.length && typeof pathOrContents !== "string") {
     return uploadData(swarmUrl)(pathOrContents);
 
   // Upload directory with JSON
@@ -197,8 +197,8 @@ const upload = swarmUrl => pathOrContents => defaultFile => {
     const path = pathOrContents;
     return fsp.lstat(path).then(stat => {
       return stat.isDirectory()
-        ? uploadDirectoryFromDisk(swarmUrl)(path)(defaultFile)
-        : uploadFileFromDisk(swarmUrl)(path);
+        ? uploadDirectoryFromDisk(swarmUrl)(defaultFile)(path)
+        : uploadDataFromDisk(swarmUrl)(path);
     });
   }
 

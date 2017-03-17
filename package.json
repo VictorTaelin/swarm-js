@@ -1,6 +1,6 @@
 {
   "name": "swarm-js",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Swarm tools for JavaScript.",
   "main": "swarm.js",
   "scripts": {
