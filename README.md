@@ -42,7 +42,7 @@ swarm.upload(new Buffer(file)).then(hash => {
 })
 ```
 
-#### Downlod raw data
+#### Download raw data
 
 To download raw data, just call `swarm.download(hash)`. It returns a promise with the data buffer.
 
@@ -81,27 +81,29 @@ swarm.download(dirHash).then(dir => {
 });
 ```
 
-
 #### Download a file/directory to disk (on Node.js)
 
 ```javascript
-swarm.download(dappHash, "/target/dir")
-  .then(dirPath => console.log(`Downloaded DApp to ${dirPath}.`))
+swarm.download("DAPP_HASH", "/target/dir")
+  .then(path => console.log(`Downloaded DApp to ${path}.`))
   .catch(console.log);
 ```
 
-#### Upload a file/directory from disk (on Node.js)
+#### Upload raw data, a file or a directory from disk (on Node.js)
 
 ```javascript
-swarm.upload("/path/to/file/or/dir", "/optional_default_file.xyz")
+swarm.upload({
+  path: "/path/to/thing",      // path to data / file / directory
+  kind: "directory",           // could also be "file" or "data"
+  defaultFile: "/index.html"}) // optional, and only for kind === "directory"
   .then(console.log)
   .catch(console.log);
 ```
 
-#### Upload a file/directory from disk (on Browser)
+#### Upload raw data, a file or a directory from disk (on Browser)
 
 ```javascript
-swarm.upload(isDapp) // uploads file if isDapp === false, otherwise uploads directory
+swarm.upload({pick: "file"}) // could also be "directory" or "data"
 ```
 
 ## Uploading an Ethereum DApp

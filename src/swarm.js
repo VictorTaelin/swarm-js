@@ -144,6 +144,15 @@ const uploadToManifest = swarmUrl => hash => route => file => {
   return attempt(3);
 };
 
+// String -> {type: String, data: Buffer} -> Promise String
+const uploadFile = swarmUrl => file =>
+  uploadDirectory(swarmUrl)({"": file});
+
+// String -> String -> Promise String
+const uploadFileFromDisk = swarmUrl => filePath =>
+  fsp.readFile(filePath)
+    .then(data => uploadFile(swarmUrl)({type: mimetype.lookup(filePath), data: data}));
+
 // String -> Map String File -> Promise String
 //   Uploads a directory to Swarm. The directory is
 //   represented as a map of routes and files.
@@ -172,34 +181,37 @@ const uploadDirectoryFromDisk = swarmUrl => defaultPath => dirPath =>
     .then(directory => merge (defaultPath ? {"": directory[defaultPath]} : {}) (directory))
     .then(uploadDirectory(swarmUrl));
 
-// String -> Buffer | Bool | Map String Buffer | String -> Nullable String -> Promise String
+// String -> UploadInfo -> Promise String
 //   Simplified multi-type upload which calls the correct
 //   one based on the type of the argument given.
-const upload = swarmUrl => pathOrContents => defaultFile => {
+const upload = swarmUrl => arg => {
+  // Upload raw data from browser
+  if (arg.pick === "data") {
+      return pick.data().then(uploadData(swarmUrl));
+
   // Upload a file from browser
-  if (!pathOrContents) {
-    return pick.file().then(uploadData(swarmUrl));
+  } else if (arg.pick === "file") {
+    return pick.file().then(uploadFile(swarmUrl));
 
   // Upload a directory from browser
-  } else if (pathOrContents === true) {
-    return pick.directory().then(uploadDirectory(swarmUrl));
-
-  // Upload raw data (buffer)
-  } else if (pathOrContents.length && typeof pathOrContents !== "string") {
-    return uploadData(swarmUrl)(pathOrContents);
-
-  // Upload directory with JSON
-  } else if (pathOrContents instanceof Object) {
-    return uploadDirectory(swarmUrl)(pathOrContents);
+  } else if (arg.pick === "directory") {
+      return pick.directory().then(uploadDirectory(swarmUrl));
 
   // Upload directory/file from disk
-  } else if (typeof pathOrContents === "string") {
-    const path = pathOrContents;
-    return fsp.lstat(path).then(stat => {
-      return stat.isDirectory()
-        ? uploadDirectoryFromDisk(swarmUrl)(defaultFile)(path)
-        : uploadDataFromDisk(swarmUrl)(path);
-    });
+  } else if (arg.path) {
+    switch (arg.kind) {
+      case "data": return uploadDataFromDisk(swarmUrl)(arg.path);
+      case "file": return uploadFileFromDisk(swarmUrl)(arg.path);
+      case "directory": return uploadDirectoryFromDisk(swarmUrl)(arg.defaultFile)(arg.path);
+    };
+
+  // Upload raw data (buffer)
+  } else if (arg.length) {
+    return uploadData(swarmUrl)(arg);
+
+  // Upload directory with JSON
+  } else if (arg instanceof Object) {
+    return uploadDirectory(swarmUrl)(arg);
   }
 
   return Q.reject(new Error("Bad arguments"));
@@ -368,8 +380,10 @@ const at = swarmUrl => ({
   downloadEntries: uncurry(downloadEntries(swarmUrl)),
   downloadRoutes: uncurry(downloadRoutes(swarmUrl)),
   isAvailable: () => isAvailable(swarmUrl),
-  upload: (pathOrContents,defaultFile) => upload(swarmUrl)(pathOrContents)(defaultFile),
+  upload: (arg) => upload(swarmUrl)(arg),
   uploadData: uncurry(uploadData(swarmUrl)),
+  uploadFile: uncurry(uploadFile(swarmUrl)),
+  uploadFileFromDisk: uncurry(uploadFile(swarmUrl)),
   uploadDataFromDisk: uncurry(uploadDataFromDisk(swarmUrl)),
   uploadDirectory: uncurry(uploadDirectory(swarmUrl)),
   uploadDirectoryFromDisk: uncurry(uploadDirectoryFromDisk(swarmUrl)),
@@ -394,6 +408,8 @@ module.exports = {
   upload,
   uploadData,
   uploadDataFromDisk,
+  uploadFile,
+  uploadFileFromDisk,
   uploadDirectory,
   uploadDirectoryFromDisk,
   uploadToManifest,

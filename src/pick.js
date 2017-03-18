@@ -1,4 +1,4 @@
-picker = pickDirectory => () => new Promise((resolve, reject) => {
+picker = type => () => new Promise((resolve, reject) => {
   const fileLoader = e => {
     const directory = {};
     const totalFiles = e.target.files.length;
@@ -7,7 +7,7 @@ picker = pickDirectory => () => new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = e => {
         const data = new Buffer(e.target.result);
-        if (pickDirectory) {
+        if (type === "directory") {
           const path = file.webkitRelativePath;
           directory[path.slice(path.indexOf("/")+1)] = {
             type: "text/plain",
@@ -15,6 +15,9 @@ picker = pickDirectory => () => new Promise((resolve, reject) => {
           };
           if (++loadedFiles === totalFiles)
             resolve(directory);
+        } else if (type === "file") {
+          const path = file.webkitRelativePath;
+          resolve({"type": mimetype.lookup(path), "data": data});
         } else {
           resolve(data);
         }
@@ -24,7 +27,7 @@ picker = pickDirectory => () => new Promise((resolve, reject) => {
   };
 
   let fileInput;
-  if (pickDirectory) {
+  if (type === "directory") {
     fileInput = document.createElement("input");
     fileInput.addEventListener("change", fileLoader);
     fileInput.type = "file";
@@ -45,6 +48,7 @@ picker = pickDirectory => () => new Promise((resolve, reject) => {
 });
 
 module.exports = {
-  file: picker(false),
-  directory: picker(true)
+  data: picker("data"),
+  file: picker("file"),
+  directory: picker("directory"),
 }

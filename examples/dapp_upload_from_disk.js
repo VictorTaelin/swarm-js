@@ -5,6 +5,8 @@
 const swarm = require("./../src/swarm.js").at("http://swarm-gateways.net");
 const path = require("path");
 
-swarm.upload(path.join(__dirname,"example_dapp_uploader"), "/index.html")
+swarm.upload({
+  path: path.join(__dirname,"example_dapp_uploader"),
+  kind: "directory"}) // could be "file", "data" or "directory"
   .then(console.log)
   .catch(console.log);
