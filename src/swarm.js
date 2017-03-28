@@ -288,7 +288,7 @@ const startProcess = swarmSetup => new Q((resolve, reject) => {
 
   swarmProcess.stdout.on('data', handleProcessOutput);
   swarmProcess.stderr.on('data', handleProcessOutput);
-  swarmProcess.on('close', () => {}); // TODO: handle close?
+  swarmProcess.on('close', () => startProcess(swarmSetup).then(resolve).catch(reject));
   const timeout = setTimeout(() =>
     reject(new Error("Couldn't start swarm process.")),
     20000);
