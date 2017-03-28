@@ -19,15 +19,23 @@ const targz = require("tar.gz");
 // String -> String ~> Promise String
 //   Downloads a file from an url to a path.
 //   Returns a promise containing the path.
-const download = url => filePath => 
-  Q.resolve(mkdirp(path.dirname(filePath)))
-    .then(() => new Q((resolve, reject) => {
+const download = url => filePath => {
+  const promise = Q.resolve(mkdirp(path.dirname(filePath))).then(() =>
+    new Q((resolve, reject) => {
       const writeStream = fs.createWriteStream(filePath);
       const downloadStream = got.stream(url);
       downloadStream.on("end", () => resolve(path));
+      downloadStream.on("data", chunk => promise.onDataCallback(chunk));
       downloadStream.on("error", reject);
       downloadStream.pipe(writeStream);
     }));
+  promise.onDataCallback = () => {};
+  promise.onData = callback => {
+    promise.onDataCallback = callback || (() => {});
+    return promise;
+  }
+  return promise;
+};
 
 // String -> String ~> Promise String
 //   Hashes a file using the given algorithm (ex: "md5").
@@ -111,21 +119,26 @@ const safeDownloadArchived = url => archiveHash => fileHash => filePath => {
   const fileName = path.basename(filePath);
   const archivePath = path.join(fileDir, ".swarm_downloads/files.tar.gz");
   const archiveDir = path.dirname(archivePath);
-  return Q.resolve(mkdirp(archiveDir))
+  const promise = Q.resolve(mkdirp(archiveDir))
     .then(() => checksum (fileHash) (filePath))
     .then(() => filePath)
     .catch(() => fsp.exists(archiveDir)
       .then(exists => !exists ? fsp.mkdir(archiveDir) : null)
-      .then(() => download (url) (archivePath))
+      .then(() => download (url)(archivePath).onData(promise.onDataCallback))
       .then(() => hash("md5")(archivePath))
       .then(() => archiveHash ? checksum(archiveHash)(archivePath) : null)
       .then(() => extract (archivePath) (archiveDir))
       .then(() => search (new RegExp(fileName+"$")) (archiveDir))
       .then(fp => fsp.rename (fp[0], filePath))
       .then(() => fsp.unlink (archivePath))
-      //.then(() => fsp.rmdir (targzDir)) // TODO: remove all files recursively
       .then(() => fileHash ? checksum(fileHash)(filePath) : null)
       .then(() => filePath));
+  promise.onDataCallback = () => {};
+  promise.onData = callback => {
+    promise.onDataCallback = callback || (() => {});
+    return promise;
+  };
+  return promise;
 };
 
 // String -> String ~> Promise String

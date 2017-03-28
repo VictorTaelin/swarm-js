@@ -242,14 +242,15 @@ const downloadBinary = path => {
   const archiveUrl = "https://gethstore.blob.core.windows.net/builds/geth-alltools-darwin-amd64-1.5.9-a07539fb.tar.gz";
   const archiveMd5 = "bc02dc162928e4f0acce432df70135af";
   const swarmMd5 = "1c3e04d93a6ee6d227476d2a56513af0";
-  return files.safeDownloadArchived (archiveUrl) (archiveMd5) (swarmMd5) (path);
+  return files.safeDownloadArchived(archiveUrl)(archiveMd5)(swarmMd5)(path);
 };
 
 // type SwarmSetup = {
 //   account : String,
 //   password : String,
 //   dataDir : String,
-//   ethApi : String
+//   ethApi : String,
+//   onDownloadProgress : Number ~> ()
 // }
 
 // SwarmSetup ~> Promise Process
@@ -329,6 +330,7 @@ const local = swarmSetup => useAPI =>
     isAvailable
       ? useAPI(at("http://localhost:8500")).then(() => {})
       : downloadBinary(path.join(swarmSetup.dataDir, "bin", "swarm"))
+        .onData(data => (swarmSetup.onProgress || (() => {}))(data.length))
         .then(() => startProcess(swarmSetup))
         .then(process => useAPI(at("http://localhost:8500")).then(() => process))
         .then(stopProcess));
