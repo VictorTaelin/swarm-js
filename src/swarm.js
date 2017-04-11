@@ -187,7 +187,7 @@ const uploadDirectoryFromDisk = swarmUrl => defaultPath => dirPath =>
 const upload = swarmUrl => arg => {
   // Upload raw data from browser
   if (arg.pick === "data") {
-      return pick.data().then(uploadData(swarmUrl));
+    return pick.data().then(uploadData(swarmUrl));
 
   // Upload a file from browser
   } else if (arg.pick === "file") {
@@ -257,7 +257,7 @@ const downloadBinary = path => {
 //   Starts the Swarm process.
 const startProcess = swarmSetup => new Q((resolve, reject) => {
   const hasString = str => buffer => ('' + buffer).indexOf(str) !== -1;
-  const {account, password, dataDir, ethApi} = swarmSetup;
+  const {account, password, dataDir, ethApi, privateKey} = swarmSetup;
   const binPath = path.join(swarmSetup.dataDir, "bin", "swarm");
 
   const STARTUP_TIMEOUT_SECS = 3;
@@ -266,11 +266,11 @@ const startProcess = swarmSetup => new Q((resolve, reject) => {
   const LISTENING = 2;
   const PASSWORD_PROMPT_HOOK = "Passphrase";
   const LISTENING_HOOK = "Swarm HTTP proxy started";
-  
+    
   let state = WAITING_PASSWORD;
 
   const swarmProcess = spawn(binPath, [
-    '--bzzaccount', account,
+    '--bzzaccount', account || privateKey,
     '--datadir', dataDir,
     '--ethapi', ethApi]);
 
@@ -280,7 +280,7 @@ const startProcess = swarmSetup => new Q((resolve, reject) => {
         state = STARTING;
         swarmProcess.stdin.write(password + '\n');
       }, 500);
-    } else if (state === STARTING && hasString (LISTENING_HOOK) (data)) {
+    } else if (hasString (LISTENING_HOOK) (data)) {
       state = LISTENING;
       clearTimeout(timeout);
       resolve(swarmProcess);
@@ -289,10 +289,11 @@ const startProcess = swarmSetup => new Q((resolve, reject) => {
 
   swarmProcess.stdout.on('data', handleProcessOutput);
   swarmProcess.stderr.on('data', handleProcessOutput);
-  swarmProcess.on('close', () => startProcess(swarmSetup).then(resolve).catch(reject));
-  const timeout = setTimeout(() =>
-    reject(new Error("Couldn't start swarm process.")),
-    20000);
+  //swarmProcess.on('close', () => setTimeout(restart, 2000));
+
+  let restart = () => startProcess(swarmSetup).then(resolve).catch(reject);
+  let error = () => reject(new Error("Couldn't start swarm process."));
+  let timeout = setTimeout(error, 20000);
 });
 
 // Process ~> Promise ()
