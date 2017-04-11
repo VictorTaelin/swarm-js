@@ -87,9 +87,7 @@ const isDirectory = path =>
     .then(stats => stats.isDirectory())
     .catch(() => false);
 
-// String -> String ~> Promise String
-//   Recursively looks for all files in a directory until it finds
-//   the one asked for. Returns a promise containing its path.
+// String -> Promise String
 const directoryTree = dirPath => {
   let paths = [];
   const search = dirPath =>
