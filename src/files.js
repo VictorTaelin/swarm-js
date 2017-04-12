@@ -24,7 +24,7 @@ const download = url => filePath => {
     new Q((resolve, reject) => {
       const writeStream = fs.createWriteStream(filePath);
       const downloadStream = got.stream(url);
-      downloadStream.on("end", () => resolve(path));
+      downloadStream.on("end", () => resolve(filePath));
       downloadStream.on("data", chunk => promise.onDataCallback(chunk));
       downloadStream.on("error", reject);
       downloadStream.pipe(writeStream);
