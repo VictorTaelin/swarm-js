@@ -1,12 +1,16 @@
 const Q = require("bluebird");
+const archives = require("./../archives/archives.json");
 const assert = require("assert");
 const files = require("./files.js");
 const fsp = require("fs-promise");
 const got = require("got");
 const mimetype = require('mimetype');
+const os = require("os");
 const path = require("path");
-const {spawn} = require("child_process");
 const pick = require("./pick.js");
+const {spawn} = require("child_process");
+
+const downloadUrl = "http://maiavictor.com/";
 
 // ∀ a . String -> JSON -> Map String a -o Map String a
 //   Inserts a key/val pair in an object impurely.
@@ -239,16 +243,19 @@ const download = swarmUrl => hash => path =>
 //   resolves when the exact Swarm file is there, and verified to be correct.
 //   If it was already there to begin with, skips the download.
 const downloadBinary = path => {
-  const archiveUrl = "https://gethstore.blob.core.windows.net/builds/geth-alltools-darwin-amd64-1.5.9-a07539fb.tar.gz";
-  const archiveMd5 = "bc02dc162928e4f0acce432df70135af";
-  const swarmMd5 = "1c3e04d93a6ee6d227476d2a56513af0";
-  return files.safeDownloadArchived(archiveUrl)(archiveMd5)(swarmMd5)(path);
+  const system = os.platform() + "-" + (os.arch() === "x64" ? "amd64" : "386");
+  const archive = archives[system];
+  const archiveUrl = downloadUrl + archive.archive + ".tar.gz";
+  const archiveMD5 = archive.archiveMD5;
+  const binaryMD5 = archive.binaryMD5;
+  return files.safeDownloadArchived(archiveUrl)(archiveMD5)(binaryMD5)(path);
 };
 
 // type SwarmSetup = {
 //   account : String,
 //   password : String,
 //   dataDir : String,
+//   binPath : String,
 //   ethApi : String,
 //   onDownloadProgress : Number ~> ()
 // }
@@ -258,7 +265,6 @@ const downloadBinary = path => {
 const startProcess = swarmSetup => new Q((resolve, reject) => {
   const hasString = str => buffer => ('' + buffer).indexOf(str) !== -1;
   const {account, password, dataDir, ethApi, privateKey} = swarmSetup;
-  const binPath = path.join(swarmSetup.dataDir, "bin", "swarm");
 
   const STARTUP_TIMEOUT_SECS = 3;
   const WAITING_PASSWORD = 0;
@@ -269,7 +275,7 @@ const startProcess = swarmSetup => new Q((resolve, reject) => {
     
   let state = WAITING_PASSWORD;
 
-  const swarmProcess = spawn(binPath, [
+  const swarmProcess = spawn(swarmSetup.binPath, [
     '--bzzaccount', account || privateKey,
     '--datadir', dataDir,
     '--ethapi', ethApi]);
@@ -330,7 +336,7 @@ const local = swarmSetup => useAPI =>
   isAvailable("http://localhost:8500").then(isAvailable =>
     isAvailable
       ? useAPI(at("http://localhost:8500")).then(() => {})
-      : downloadBinary(path.join(swarmSetup.dataDir, "bin", "swarm"))
+      : downloadBinary(swarmSetup.binPath)
         .onData(data => (swarmSetup.onProgress || (() => {}))(data.length))
         .then(() => startProcess(swarmSetup))
         .then(process => useAPI(at("http://localhost:8500")).then(() => process))

@@ -1,0 +1,47 @@
+{
+  "windows-amd64": {
+    "archive": "swarm-windows-amd64-1.5.9.exe",
+    "binaryMD5": "69c565c8132dd69c8b54df8597d50f08",
+    "archiveMD5": "6e54e9d792e464f906195fcf3936acb5"
+  },
+  "windows-386": {
+    "archive": "swarm-windows-386-1.5.9.exe",
+    "binaryMD5": "3518245a4bb305988f9a5e59e0e7943c",
+    "archiveMD5": "fde61c141e6ef79dace37cf5b360793f"
+  },
+  "linux-amd64": {
+    "archive": "swarm-linux-amd64-1.5.9",
+    "binaryMD5": "9ed4d9c08482d83c50e1c06134c9dd28",
+    "archiveMD5": "82ca2de93e24d4b786ab6a69f3a2e958"
+  },
+  "linux-386": {
+    "archive": "swarm-linux-386-1.5.9",
+    "binaryMD5": "b92a86dc265967b9876ddc9cadc9e450",
+    "archiveMD5": "54fb35071dfdf6d886deac7cc43c349f"
+  },
+  "linux-arm5": {
+    "archive": "swarm-linux-arm5-1.5.9",
+    "binaryMD5": "9a27465653c62ed1dbd71a8c6956dc21",
+    "archiveMD5": "589084ac2a1b12a74fec169e9e2a4ca2"
+  },
+  "linux-arm6": {
+    "archive": "swarm-linux-arm6-1.5.9",
+    "binaryMD5": "bb4d5ea9d717e3c84767dbefb720119c",
+    "archiveMD5": "938347a0918b5d336cb8b16bf3f2f4a2"
+  },
+  "linux-arm7": {
+    "archive": "swarm-linux-arm7-1.5.9",
+    "binaryMD5": "6e63ea90d8c213a04a7370424fa977fa",
+    "archiveMD5": "62fd2c1d8799ffd99c6b9ddd218d72c8"
+  },
+  "linux-arm64": {
+    "archive": "swarm-linux-arm64-1.5.9",
+    "binaryMD5": "59058d7c1910c3e1c5094a811034d03f",
+    "archiveMD5": "768764d4183e8e2d853d90e9870ff43a"
+  },
+  "darwin-amd64": {
+    "archive": "swarm-darwin-amd64-1.5.9",
+    "binaryMD5": "1c3e04d93a6ee6d227476d2a56513af0",
+    "archiveMD5": "4daadb24d3026e9fb3f8ae459f09f152"
+  }
+}

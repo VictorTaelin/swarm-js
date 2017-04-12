@@ -39,7 +39,7 @@ got("https://gethstore.blob.core.windows.net/builds?restype=container&comp=list"
         const gethArchiveName = file.Name[0];
         const parts = gethArchiveName.split("-");
         const props = file.Properties[0];
-        const swarmBinaryDir = `swarm-${parts[2]}-${parts[3]}-${parts[4]}${parts[2] === "windows" ? ".exe" : ""}`;
+        const swarmArchiveName = `swarm-${parts[2]}-${parts[3]}-${parts[4]}${parts[2] === "windows" ? ".exe" : ""}`;
         return {
           date: new Date(props["Last-Modified"]),
           hash: props["Content-MD5"][0],
@@ -50,9 +50,10 @@ got("https://gethstore.blob.core.windows.net/builds?restype=container&comp=list"
           gethArchivePath: path.join(process.cwd(), "tmp_downloads", gethArchiveName),
           gethArchiveUrl: "https://gethstore.blob.core.windows.net/builds/" + gethArchiveName,
           gethFilesPath: path.join(process.cwd(), "tmp_downloads", gethArchiveName.replace(/(\.zip|\.tar\.gz)/,"")),
-          swarmBinaryDir: path.join(process.cwd(), "tmp_downloads", swarmBinaryDir),
-          swarmBinaryPath: path.join(process.cwd(), "tmp_downloads", swarmBinaryDir, "swarm"),
-          swarmArchivePath: path.join(process.cwd(), "archives", swarmBinaryDir + ".tar.gz"),
+          swarmArchiveName: swarmArchiveName,
+          swarmBinaryDir: path.join(process.cwd(), "tmp_downloads", swarmArchiveName),
+          swarmBinaryPath: path.join(process.cwd(), "tmp_downloads", swarmArchiveName, "swarm"),
+          swarmArchivePath: path.join(process.cwd(), "archives", swarmArchiveName + ".tar.gz"),
         }
       })
       .sort((a, b) => a.date - b.date)
@@ -68,7 +69,7 @@ got("https://gethstore.blob.core.windows.net/builds?restype=container&comp=list"
       .filter(bin => bin.version === binaries[binaries.length - 1].version)
       .map(bin => {
         const archive = archives[bin.os+"-"+bin.arch] = {
-          archivePath: bin.swarmArchivePath
+          archive: bin.swarmArchiveName
         };
         return files.download(bin.gethArchiveUrl)(bin.gethArchivePath)
           .then(path => decompress(path, "tmp_downloads"))
