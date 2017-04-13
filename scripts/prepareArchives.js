@@ -39,7 +39,8 @@ got("https://gethstore.blob.core.windows.net/builds?restype=container&comp=list"
         const gethArchiveName = file.Name[0];
         const parts = gethArchiveName.split("-");
         const props = file.Properties[0];
-        const swarmArchiveName = `swarm-${parts[2]}-${parts[3]}-${parts[4]}${parts[2] === "windows" ? ".exe" : ""}`;
+        const swarmArchiveExt = parts[2] === "windows" ? ".exe" : "";
+        const swarmArchiveName = `swarm-${parts[2]}-${parts[3]}-${parts[4]}${swarmArchiveExt}`;
         return {
           date: new Date(props["Last-Modified"]),
           hash: props["Content-MD5"][0],
@@ -52,7 +53,7 @@ got("https://gethstore.blob.core.windows.net/builds?restype=container&comp=list"
           gethFilesPath: path.join(process.cwd(), "tmp_downloads", gethArchiveName.replace(/(\.zip|\.tar\.gz)/,"")),
           swarmArchiveName: swarmArchiveName,
           swarmBinaryDir: path.join(process.cwd(), "tmp_downloads", swarmArchiveName),
-          swarmBinaryPath: path.join(process.cwd(), "tmp_downloads", swarmArchiveName, "swarm"),
+          swarmBinaryPath: path.join(process.cwd(), "tmp_downloads", swarmArchiveName, "swarm" + swarmArchiveExt),
           swarmArchivePath: path.join(process.cwd(), "archives", swarmArchiveName + ".tar.gz"),
         }
       })
