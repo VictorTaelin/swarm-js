@@ -243,7 +243,7 @@ const download = swarmUrl => hash => path =>
 //   resolves when the exact Swarm file is there, and verified to be correct.
 //   If it was already there to begin with, skips the download.
 const downloadBinary = path => {
-  const system = os.platform() + "-" + (os.arch() === "x64" ? "amd64" : "386");
+  const system = os.platform().replace("win32","windows") + "-" + (os.arch() === "x64" ? "amd64" : "386");
   const archive = archives[system];
   const archiveUrl = downloadUrl + archive.archive + ".tar.gz";
   const archiveMD5 = archive.archiveMD5;
