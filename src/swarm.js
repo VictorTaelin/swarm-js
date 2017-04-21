@@ -10,7 +10,7 @@ const path = require("path");
 const pick = require("./pick.js");
 const {spawn} = require("child_process");
 
-const downloadUrl = "http://maiavictor.com/";
+const downloadUrl = "http://ethereum-mist.s3.amazonaws.com/swarm/";
 
 // ∀ a . String -> JSON -> Map String a -o Map String a
 //   Inserts a key/val pair in an object impurely.
