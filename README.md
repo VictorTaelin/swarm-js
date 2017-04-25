@@ -145,7 +145,7 @@ When you run that script, it outputs a hash. You can then use that hash to acces
 
 ## Running a local node
 
-Rather than using a gateway, you might wish to run your own local node. For that, you can either [download/install/run it yourself](http://swarm-guide.readthedocs.io/en/latest/), and then use `require("swarm-js").at("http://localhost:8500")`, or let Swarm.js take care of it:
+Rather than using a gateway, you might wish to run your own local node. For that, you can either [download/install/run it yourself](http://swarm-guide.readthedocs.io/en/latest/), and then use `require("swarm-js").at("http://localhost:8500")`, or let Swarm.js take care of it. For that, you just need to write a small config JSON with some info: 
 
 ```javascript
 const Swarm = require("swarm-js");
@@ -153,15 +153,30 @@ const Swarm = require("swarm-js");
 // To run Swarm locally, you need a running Geth
 // node and an Ethereum account/password
 const config = {
+  // Either an address visible by `geth account list`, or the path to a private
+  // key (a file with 64 hex characteres); obviously, use an account without eth!
   account: "d849168d52ea5c40de1b0b973cfd96873c961963",
+
+  // Password to unlock the address above; omit if you used a path to a key
   password: "sap",
-  dataDir: process.env.HOME+"/Library/Ethereum/testnet",
-  ethApi: process.env.HOME+"/Library/Ethereum/testnet/geth.ipc"
+
+  // Path where swarm-js will save its files
+  dataDir: process.env.HOME + "/Library/Ethereum/swarm-js",
+
+  // Path where geth.ipc is (that file is created when you start geth)
+  ethApi: process.env.HOME + "/Library/Ethereum/geth.ipc",
+
+  // Path where the swarm binary is (if there is nothing on this path, swarm-js
+  // will safely download and place it there). Add `.exe` to the end if you're
+  // on windows (otherwise it won't recognize as an executable file - eventually
+  // this will be improved)
+  binPath: process.env.HOME + "/Library/Ethereum/swarm-js/bin/swarm"
 };
 
 // Magically starts a local Swarm node
 // Downloads binaries if necessary
 Swarm.local(config, swarm => new Promise((resolve, reject) => {
+  // you can use the `swarm` object inside here
 
   // Uploads data using the local node
   swarm.upload(new Buffer("test")).then(hash => {
@@ -174,7 +189,7 @@ Swarm.local(config, swarm => new Promise((resolve, reject) => {
 })).then(() => console.log("Done!"));
 ```
 
-That function does everything required to start a local Swarm node, including downloading binaries (if not available yet) and manging the process. It then gives you a `swarm` object pointing to the local node. If the Swarm process was started by `Swarm.js`, it will be closed when you call `resolve()`. While it is up, you're able to access it on your browser at `http://localhost:8500`.
+If you have any trouble with this, please open an issue to let me know. That function does everything required to start a local Swarm node, including downloading binaries (if not available yet) and manging the process. It then gives you a `swarm` object pointing to the local node. If the Swarm process was started by `Swarm.js`, it will be closed when you call `resolve()`. While it is up, you're able to access it on your browser at `http://localhost:8500`.
 
 ## API
 
