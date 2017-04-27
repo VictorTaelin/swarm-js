@@ -106,6 +106,10 @@ swarm.upload({
 swarm.upload({pick: "file"}) // could also be "directory" or "data"
 ```
 
+#### Uploading a PDF
+
+- [Uploading a PDF  in various ways (gist).](https://gist.github.com/MaiaVictor/ae0439de5ca752604675ffa4535e47b4)
+
 ## Uploading an Ethereum DApp
 
 When it comes to decentralized applications (DApps), the Ethereum network is responsible for the back-end logic, while Swarm is responsible for hosting and serving the front-end code. Hosting a DApp on Swarm is as simple as creating a directory with some HTMLs and a default route (the "index.html"). This, too, can be done with Swarm.js either [from disk](https://github.com/MaiaVictor/swarm-js/blob/master/examples/dapp_upload_from_disk.js), or with [pure JavaScript](https://github.com/MaiaVictor/swarm-js/blob/master/examples/dapp_upload.js). Here is a sneak peek:
