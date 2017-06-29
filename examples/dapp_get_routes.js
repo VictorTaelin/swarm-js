@@ -1,7 +1,7 @@
 // Solves the Swarm manifest at a given path recursively, returns a flat JSON
 // mapping the routes of its directory tree to the hash of each file on it.
 
-const swarm = require("./../src/swarm.js").at("http://swarm-gateways.net");
+const swarm = require("./../src/swarm.js").at("http://localhost:8500");
 const exampleDAppHash = "8587c8e716bfceea12a7306d85a8a8ccad5019020916eb5a21fa47a7f1826891";
 
 swarm.downloadRoutes(exampleDAppHash)

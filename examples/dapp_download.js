@@ -3,10 +3,10 @@
 // (buffers). That allows any DApp to download the directory tree of any other
 // DApp in pure JavaScript.
 
-const swarm = require("./../src/swarm.js").at("http://swarm-gateways.net");
+const swarm = require("./../src/swarm.js").at("http://localhost:8500");
 
 // The hash of the DApp we uploaded on the other example.
-const exampleDAppHash = "379d2791624c3e3719bb28f7bfa362cc9c726ec06482b5800c8e3cefaf2b7bcf";
+const exampleDAppHash = "fa059fa34ead773c5bb90595335e5925278bee3f9a4ba39741ddcf464fdd964f";
 
 // Download the example DApp and print its index.html.
 // It knows it is a DApp (not a file) by checking the existence of a manifest.

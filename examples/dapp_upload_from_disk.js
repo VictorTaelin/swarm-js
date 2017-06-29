@@ -2,7 +2,7 @@
 // Outputs the DApp address. In this case, it is:
 // 379d2791624c3e3719bb28f7bfa362cc9c726ec06482b5800c8e3cefaf2b7bcf
 
-const swarm = require("./../src/swarm.js").at("http://swarm-gateways.net");
+const swarm = require("./../src/swarm.js").at("http://localhost:8500");
 const path = require("path");
 
 swarm.upload({

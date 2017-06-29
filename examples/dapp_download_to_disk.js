@@ -1,6 +1,6 @@
 // Downloads a directory hosted on the Swarm network to the disk.
 
-const swarm = require("./../src/swarm.js").at("http://swarm-gateways.net");
+const swarm = require("./../src/swarm.js").at("http://localhost:8500");
 const path = require("path");
 
 // The hash of the DApp we uploaded on the other example.

@@ -1,14 +1,6 @@
-const Q = require("bluebird");
-const archives = require("./../archives/archives.json");
-const assert = require("assert");
-const files = require("./files.js");
-const fsp = require("fs-promise");
-const got = require("got");
 const mimetype = require('mimetype');
-const os = require("os");
-const path = require("path");
 const pick = require("./pick.js");
-const {spawn} = require("child_process");
+const got = require("got");
 
 const downloadUrl = "http://ethereum-mist.s3.amazonaws.com/swarm/";
 
@@ -55,7 +47,6 @@ const downloadData = swarmUrl => hash =>
 //   Returns a map from full paths to entries.
 const downloadEntries = swarmUrl => hash => {
   const search = hash => path => routes => {
-
     // Formats an entry to the Swarm.js type.
     const format = entry => ({
       type: entry.contentType,
@@ -67,14 +58,16 @@ const downloadEntries = swarmUrl => hash => {
     const downloadEntry = entry => 
       entry.contentType === "application/bzz-manifest+json"
         ? search (entry.hash) (path + entry.path) (routes)
-        : Q.resolve (impureInsert (path + entry.path) (format(entry)) (routes));
+        : Promise.resolve (impureInsert (path + entry.path) (format(entry)) (routes));
 
     // Downloads the initial manifest and then each entry.
     return downloadData(swarmUrl)(hash)
       .then(text => JSON.parse(text).entries)
-      .then(entries => Q.reduce(entries.map(downloadEntry), (a,b) => b));
-
+      .then(entries => entries
+        .map(downloadEntry)
+        .reduce((a,b) => b.then(a), Promise.resolve()));
   }
+
   return search (hash) ("") ({});
 }
 
@@ -97,14 +90,14 @@ const downloadDirectory = swarmUrl => hash =>
       const types = paths.map(path => entries[path].type);
       const datas = hashs.map(downloadData(swarmUrl));
       const files = datas => datas.map((data, i) => ({type: types[i], data: data}));
-      return Q.all(datas).then(datas => toMap(paths)(files(datas)));
+      return Promise.all(datas).then(datas => toMap(paths)(files(datas)));
     });
 
 // String -> String -> String -> Promise String
 //   Gets the raw contents of a Swarm hash address.  
 //   Returns a promise with the downloaded file path.
 const downloadDataToDisk = swarmUrl => hash => filePath =>
-  files.download (rawUrl(swarmUrl)(hash)) (filePath);
+  require("."+"/files.js").download (rawUrl(swarmUrl)(hash)) (filePath);
 
 // String -> String -> String -> Promise (Map String String)
 //   Gets the entire directory tree in a Swarm address.
@@ -115,11 +108,11 @@ const downloadDirectoryToDisk = swarmUrl => hash => dirPath =>
       let downloads = [];
       for (let route in routingTable) {
         if (route.length > 0) {
-          const filePath = path.join(dirPath, route);
+          const filePath = require("p"+"ath").join(dirPath, route);
           downloads.push(downloadDataToDisk(swarmUrl)(routingTable[route])(filePath));
         };
       };
-      return Q.all(downloads).then(() => dirPath);
+      return Promise.all(downloads).then(() => dirPath);
     });
 
 // String -> Buffer -> Promise String
@@ -154,7 +147,7 @@ const uploadFile = swarmUrl => file =>
 
 // String -> String -> Promise String
 const uploadFileFromDisk = swarmUrl => filePath =>
-  fsp.readFile(filePath)
+  require("f"+"s-promise").readFile(filePath)
     .then(data => uploadFile(swarmUrl)({type: mimetype.lookup(filePath), data: data}));
 
 // String -> Map String File -> Promise String
@@ -166,18 +159,18 @@ const uploadDirectory = swarmUrl => directory =>
     .then(hash => {
       const uploadRoute = route => hash => uploadToManifest(swarmUrl)(hash)(route)(directory[route]);
       const uploadToHash = (hash, route) => hash.then(uploadRoute(route));
-      return Object.keys(directory).reduce(uploadToHash, Q.resolve(hash));
+      return Object.keys(directory).reduce(uploadToHash, Promise.resolve(hash));
     });
 
 // String -> Promise String
 const uploadDataFromDisk = swarmUrl => filePath => 
-  fsp.readFile(filePath)
+  require("f"+"s-promise").readFile(filePath)
     .then(uploadData(swarmUrl));
 
 // String -> Nullable String -> String -> Promise String
 const uploadDirectoryFromDisk = swarmUrl => defaultPath => dirPath =>
-  files.directoryTree(dirPath)
-    .then(fullPaths => Q.all(fullPaths.map(path => fsp.readFile(path))).then(datas => {
+  require("."+"/files.js").directoryTree(dirPath)
+    .then(fullPaths => Promise.all(fullPaths.map(path => require("f"+"s-promise").readFile(path))).then(datas => {
       const paths = fullPaths.map(path => path.slice(dirPath.length));
       const types = fullPaths.map(path => mimetype.lookup(path) || "text/plain");
       return toMap (paths) (datas.map((data, i) => ({type: types[i], data: data})));
@@ -218,7 +211,7 @@ const upload = swarmUrl => arg => {
     return uploadDirectory(swarmUrl)(arg);
   }
 
-  return Q.reject(new Error("Bad arguments"));
+  return Promise.reject(new Error("Bad arguments"));
 }
 
 // String -> String -> Nullable String -> Promise (String | Buffer | Map String Buffer)
@@ -243,12 +236,12 @@ const download = swarmUrl => hash => path =>
 //   resolves when the exact Swarm file is there, and verified to be correct.
 //   If it was already there to begin with, skips the download.
 const downloadBinary = path => {
-  const system = os.platform().replace("win32","windows") + "-" + (os.arch() === "x64" ? "amd64" : "386");
+  const system = require("o"+"s").platform().replace("win32","windows") + "-" + (os.arch() === "x64" ? "amd64" : "386");
   const archive = archives[system];
   const archiveUrl = downloadUrl + archive.archive + ".tar.gz";
   const archiveMD5 = archive.archiveMD5;
   const binaryMD5 = archive.binaryMD5;
-  return files.safeDownloadArchived(archiveUrl)(archiveMD5)(binaryMD5)(path);
+  return require("./"+"files.js").safeDownloadArchived(archiveUrl)(archiveMD5)(binaryMD5)(path);
 };
 
 // type SwarmSetup = {
@@ -262,7 +255,9 @@ const downloadBinary = path => {
 
 // SwarmSetup ~> Promise Process
 //   Starts the Swarm process.
-const startProcess = swarmSetup => new Q((resolve, reject) => {
+const startProcess = swarmSetup => new Promise((resolve, reject) => {
+  const {spawn} = require("c"+"hild_process");
+
   const hasString = str => buffer => ('' + buffer).indexOf(str) !== -1;
   const {account, password, dataDir, ethApi, privateKey} = swarmSetup;
 
@@ -304,7 +299,7 @@ const startProcess = swarmSetup => new Q((resolve, reject) => {
 
 // Process ~> Promise ()
 //   Stops the Swarm process.
-const stopProcess = process => new Q((resolve, reject) => {
+const stopProcess = process => new Promise((resolve, reject) => {
   process.stderr.removeAllListeners('data');
   process.stdout.removeAllListeners('data');
   process.stdin.removeAllListeners('error');
@@ -376,7 +371,7 @@ const uncurry = f => (a,b,c,d,e) => {
 
 // () -> Promise Bool
 //   Not sure how to mock Swarm to test it properly. Ideas?
-const test = () => Q.resolve(true);
+const test = () => Promise.resolve(true);
 
 // String -> SwarmAPI
 //   Fixes the `swarmUrl`, returning an API where you don't have to pass it.
