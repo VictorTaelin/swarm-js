@@ -423,8 +423,8 @@ module.exports = {
 if (typeof window !== "undefined") {
   const loadLibs = () => {
     Swarm = module.exports;
-    require("setimmediate");
-    window.Buffer = require("buffer/").Buffer
+    require("s"+"etimmediate");
+    window.Buffer = require("b"+"uffer/").Buffer
     window.pick = pick;
   };
   loadLibs();

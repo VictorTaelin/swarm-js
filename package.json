@@ -1,19 +1,18 @@
 {
   "name": "swarm-js",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Swarm tools for JavaScript.",
   "main": "lib/swarm.js",
   "scripts": {
     "bundle": "browserify -d lib/swarm.js > examples/example_dapp_uploader/swarm.min.js",
     "minify": "ccjs examples/example_dapp_uploader/swarm.min.js > examples/example_dapp_uploader/swarm.min.js_; mv examples/example_dapp_uploader/swarm.min.js_ examples/example_dapp_uploader/swarm.min.js",
     "build": "npm run bundle; npm run minify",
-    "babel": " babel src --out-dir=lib",
+    "babel": "babel src --out-dir=lib",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "MaiaVictor",
   "license": "MIT",
   "dependencies": {
-    "bluebird": "^3.4.7",
     "buffer": "^5.0.5",
     "decompress": "^4.0.0",
     "fs-extra": "^2.1.2",
