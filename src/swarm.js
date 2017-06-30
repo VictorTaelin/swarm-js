@@ -1,7 +1,6 @@
 const mimetype = require('mimetype');
 const pick = require("./pick.js");
-const got = require("got");
-
+const request = require("xhr-request-promise");
 const downloadUrl = "http://ethereum-mist.s3.amazonaws.com/swarm/";
 
 // ∀ a . String -> JSON -> Map String a -o Map String a
@@ -36,8 +35,8 @@ const rawUrl = swarmUrl => hash =>
 // String -> String -> Promise Buffer
 //   Gets the raw contents of a Swarm hash address.  
 const downloadData = swarmUrl => hash =>
-  got(rawUrl(swarmUrl)(hash), {encoding: null})
-    .then(response => response.body);
+  request(rawUrl(swarmUrl)(hash), {responseType: "arraybuffer"})
+    .then(arrayBuffer => new Buffer(arrayBuffer));
 
 // type Entry = {"type": String, "hash": String}
 // type File = {"type": String, "data": Buffer}
@@ -55,17 +54,21 @@ const downloadEntries = swarmUrl => hash => {
     // To download a single entry: 
     //   if type is bzz-manifest, go deeper
     //   if not, add it to the routing table
-    const downloadEntry = entry => 
-      entry.contentType === "application/bzz-manifest+json"
-        ? search (entry.hash) (path + entry.path) (routes)
-        : Promise.resolve (impureInsert (path + entry.path) (format(entry)) (routes));
+    const downloadEntry = entry => {
+      if (entry.path === undefined) {
+        return Promise.resolve();
+      } else {
+        return entry.contentType === "application/bzz-manifest+json"
+          ? search (entry.hash) (path + entry.path) (routes)
+          : Promise.resolve (impureInsert (path + entry.path) (format(entry)) (routes));
+      }
+    }
 
     // Downloads the initial manifest and then each entry.
     return downloadData(swarmUrl)(hash)
       .then(text => JSON.parse(text).entries)
-      .then(entries => entries
-        .map(downloadEntry)
-        .reduce((a,b) => b.then(a), Promise.resolve()));
+      .then(entries => Promise.all(entries.map(downloadEntry)))
+      .then(() => routes);
   }
 
   return search (hash) ("") ({});
@@ -119,8 +122,7 @@ const downloadDirectoryToDisk = swarmUrl => hash => dirPath =>
 //   Uploads raw data to Swarm. 
 //   Returns a promise with the uploaded hash.
 const uploadData = swarmUrl => data =>
-  got(`${swarmUrl}/bzzr:/`, {"body": data, "retries": 2})
-    .then(response => response.body);
+  request(`${swarmUrl}/bzzr:/`, {body: data, method: "POST"});
 
 // String -> String -> String -> File -> Promise String
 //   Uploads a file to the Swarm manifest at a given hash, under a specific
@@ -132,11 +134,11 @@ const uploadToManifest = swarmUrl => hash => route => file => {
     const slashRoute = route[0] === "/" ? route : "/" + route;
     const url = `${swarmUrl}/bzz:/${hash}${slashRoute}`;
     const opt = {
-      "headers": {"content-type": file.type},
-      "body": file.data};
-    return got.put(url, opt)
-      .then(response => response.body)
-      .catch(e => n > 0 && attempt (n-1));
+      method: "PUT",
+      headers: {"Content-Type": file.type},
+      body: file.data};
+    return request(url, opt)
+      .catch(e => n > 0 && attempt(n-1));
   };
   return attempt(3);
 };
@@ -423,8 +425,8 @@ module.exports = {
 if (typeof window !== "undefined") {
   const loadLibs = () => {
     Swarm = module.exports;
-    require("s"+"etimmediate");
-    window.Buffer = require("b"+"uffer/").Buffer
+    require("setimmediate");
+    window.Buffer = require("buffer").Buffer
     window.pick = pick;
   };
   loadLibs();

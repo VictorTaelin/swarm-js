@@ -11,7 +11,7 @@ const swarm = require("./../src/swarm.js").at("http://localhost:8500");
 const indexHtml = new Buffer(
 `<html>
   <body>
-    <h3><img src="ethereum_icon.png"/> Swarm.js example DApp</h3>
+    <h3><img src="ethereum_icon.png"/> Swarm.js example DApp!</h3>
     <p><a href="foo/test_text_1.txt">Test #1</a></p>
     <p><a href="foo/test_text_2.txt">Test #2</a></p>
   </body>
