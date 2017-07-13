@@ -275,7 +275,7 @@ const startProcess = swarmSetup => new Promise((resolve, reject) => {
   const STARTING = 1;
   const LISTENING = 2;
   const PASSWORD_PROMPT_HOOK = "Passphrase";
-  const LISTENING_HOOK = "Swarm HTTP proxy started";
+  const LISTENING_HOOK = "Swarm http proxy started";
 
   let state = WAITING_PASSWORD;
 
