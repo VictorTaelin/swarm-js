@@ -2,7 +2,7 @@ const mimetype = require('mimetype');
 const pick = require("./pick.js");
 const request = require("xhr-request-promise");
 const downloadUrl = "http://ethereum-mist.s3.amazonaws.com/swarm/";
-const archives = require("./../archives/archives.json");
+const defaultArchives = require("./../archives/archives.json");
 
 // ∀ a . String -> JSON -> Map String a -o Map String a
 //   Inserts a key/val pair in an object impurely.
@@ -238,10 +238,10 @@ const download = swarmUrl => hash => path =>
 //   Downloads the Swarm binaries into a path. Returns a promise that only
 //   resolves when the exact Swarm file is there, and verified to be correct.
 //   If it was already there to begin with, skips the download.
-const downloadBinary = path => {
+const downloadBinary = (path, archives) => {
   const os = require("o"+"s");
   const system = os.platform().replace("win32","windows") + "-" + (os.arch() === "x64" ? "amd64" : "386");
-  const archive = archives[system];
+  const archive = (archives || defaultArchives)[system];
   const archiveUrl = downloadUrl + archive.archive + ".tar.gz";
   const archiveMD5 = archive.archiveMD5;
   const binaryMD5 = archive.binaryMD5;
@@ -254,7 +254,12 @@ const downloadBinary = path => {
 //   dataDir : String,
 //   binPath : String,
 //   ethApi : String,
-//   onDownloadProgress : Number ~> ()
+//   onDownloadProgress : Number ~> (),
+//   archives : [{
+//     archive: String,
+//     binaryMD5: String,
+//     archiveMD5: String
+//   }]
 // }
 
 // SwarmSetup ~> Promise Process
@@ -335,7 +340,7 @@ const local = swarmSetup => useAPI =>
   isAvailable("http://localhost:8500").then(isAvailable =>
     isAvailable
       ? useAPI(at("http://localhost:8500")).then(() => {})
-      : downloadBinary(swarmSetup.binPath)
+      : downloadBinary(swarmSetup.binPath, swarmSetup.archives)
         .onData(data => (swarmSetup.onProgress || (() => {}))(data.length))
         .then(() => startProcess(swarmSetup))
         .then(process => useAPI(at("http://localhost:8500")).then(() => process))

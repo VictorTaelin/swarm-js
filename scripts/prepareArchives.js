@@ -69,10 +69,12 @@ got("https://gethstore.blob.core.windows.net/builds?restype=container&comp=list"
     return Q.all(binaries
       .filter(bin => bin.version === binaries[binaries.length - 1].version)
       .map(bin => {
-        const archive = archives[bin.os+"-"+bin.arch] = {
+        const archive = archives[bin.os + "-" + bin.arch] = {
           archive: bin.swarmArchiveName
         };
+        console.log("Downloading " + bin.gethArchivePath + ".");
         return files.download(bin.gethArchiveUrl)(bin.gethArchivePath)
+          .then(path => (console.log("Downloaded " + path + "."), path))
           .then(path => decompress(path, "tmp_downloads"))
           .then(() => !fs.existsSync(bin.swarmBinaryDir) && fsp.mkdir(bin.swarmBinaryDir))
           .then(() => files.search(/swarm(.exe|)$/)(bin.gethFilesPath))
@@ -81,7 +83,8 @@ got("https://gethstore.blob.core.windows.net/builds?restype=container&comp=list"
           .then(binaryMD5 => archive.binaryMD5 = binaryMD5)
           .then(() => targz().compress(bin.swarmBinaryDir, bin.swarmArchivePath))
           .then(() => files.hash("md5")(bin.swarmArchivePath))
-          .then(archiveMD5 => archive.archiveMD5 = archiveMD5);
+          .then(archiveMD5 => archive.archiveMD5 = archiveMD5)
+          .catch(e => console.log(e));
       }))
       .then(() => fs.writeFileSync("archives/archives.json", JSON.stringify(archives, null, 2)));
   })
