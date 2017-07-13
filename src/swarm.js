@@ -2,6 +2,7 @@ const mimetype = require('mimetype');
 const pick = require("./pick.js");
 const request = require("xhr-request-promise");
 const downloadUrl = "http://ethereum-mist.s3.amazonaws.com/swarm/";
+const archives = require("./../archives/archives.json");
 
 // ∀ a . String -> JSON -> Map String a -o Map String a
 //   Inserts a key/val pair in an object impurely.
@@ -238,7 +239,8 @@ const download = swarmUrl => hash => path =>
 //   resolves when the exact Swarm file is there, and verified to be correct.
 //   If it was already there to begin with, skips the download.
 const downloadBinary = path => {
-  const system = require("o"+"s").platform().replace("win32","windows") + "-" + (os.arch() === "x64" ? "amd64" : "386");
+  const os = require("o"+"s");
+  const system = os.platform().replace("win32","windows") + "-" + (os.arch() === "x64" ? "amd64" : "386");
   const archive = archives[system];
   const archiveUrl = downloadUrl + archive.archive + ".tar.gz";
   const archiveMD5 = archive.archiveMD5;
