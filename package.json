@@ -12,6 +12,10 @@
   },
   "author": "MaiaVictor",
   "license": "MIT",
+  "repository": {
+    "type": "git",  
+    "url": "https://github.com/maiavictor/swarm-js"
+  },
   "dependencies": {
     "buffer": "^5.0.5",
     "decompress": "^4.0.0",
