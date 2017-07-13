@@ -168,7 +168,7 @@ const config = {
   dataDir: process.env.HOME + "/Library/Ethereum/swarm-js",
 
   // Path where geth.ipc is (that file is created when you start geth)
-  ethApi: process.env.HOME + "/Library/Ethereum/geth.ipc",
+  ensApi: process.env.HOME + "/Library/Ethereum/geth.ipc",
 
   // Path where the swarm binary is (if there is nothing on this path, swarm-js
   // will safely download and place it there). Add `.exe` to the end if you're

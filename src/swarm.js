@@ -12,7 +12,7 @@ const impureInsert = key => val => map =>
 // String -> JSON -> Map String JSON
 //   Merges an array of keys and an array of vals into an object.
 const toMap = keys => vals => {
-  let map = {}; 
+  let map = {};
   for (let i = 0, l = keys.length; i < l; ++i)
     map[keys[i]] = vals[i];
   return map;
@@ -34,7 +34,7 @@ const rawUrl = swarmUrl => hash =>
   `${swarmUrl}/bzzr:/${hash}`
 
 // String -> String -> Promise Buffer
-//   Gets the raw contents of a Swarm hash address.  
+//   Gets the raw contents of a Swarm hash address.
 const downloadData = swarmUrl => hash =>
   request(rawUrl(swarmUrl)(hash), {responseType: "arraybuffer"})
     .then(arrayBuffer => new Buffer(arrayBuffer));
@@ -52,7 +52,7 @@ const downloadEntries = swarmUrl => hash => {
       type: entry.contentType,
       hash: entry.hash});
 
-    // To download a single entry: 
+    // To download a single entry:
     //   if type is bzz-manifest, go deeper
     //   if not, add it to the routing table
     const downloadEntry = entry => {
@@ -86,7 +86,7 @@ const downloadRoutes = swarmUrl => hash =>
 // String -> String -> Promise (Map String File)
 //   Gets the entire directory tree in a Swarm address.
 //   Returns a promise mapping paths to file contents.
-const downloadDirectory = swarmUrl => hash => 
+const downloadDirectory = swarmUrl => hash =>
   downloadEntries (swarmUrl) (hash)
     .then(entries => {
       const paths = Object.keys(entries);
@@ -98,7 +98,7 @@ const downloadDirectory = swarmUrl => hash =>
     });
 
 // String -> String -> String -> Promise String
-//   Gets the raw contents of a Swarm hash address.  
+//   Gets the raw contents of a Swarm hash address.
 //   Returns a promise with the downloaded file path.
 const downloadDataToDisk = swarmUrl => hash => filePath =>
   require("."+"/files.js").download (rawUrl(swarmUrl)(hash)) (filePath);
@@ -120,7 +120,7 @@ const downloadDirectoryToDisk = swarmUrl => hash => dirPath =>
     });
 
 // String -> Buffer -> Promise String
-//   Uploads raw data to Swarm. 
+//   Uploads raw data to Swarm.
 //   Returns a promise with the uploaded hash.
 const uploadData = swarmUrl => data =>
   request(`${swarmUrl}/bzzr:/`, {body: data, method: "POST"});
@@ -166,7 +166,7 @@ const uploadDirectory = swarmUrl => directory =>
     });
 
 // String -> Promise String
-const uploadDataFromDisk = swarmUrl => filePath => 
+const uploadDataFromDisk = swarmUrl => filePath =>
   require("f"+"s-promise").readFile(filePath)
     .then(uploadData(swarmUrl));
 
@@ -253,7 +253,7 @@ const downloadBinary = (path, archives) => {
 //   password : String,
 //   dataDir : String,
 //   binPath : String,
-//   ethApi : String,
+//   ensApi : String,
 //   onDownloadProgress : Number ~> (),
 //   archives : [{
 //     archive: String,
@@ -268,7 +268,7 @@ const startProcess = swarmSetup => new Promise((resolve, reject) => {
   const {spawn} = require("c"+"hild_process");
 
   const hasString = str => buffer => ('' + buffer).indexOf(str) !== -1;
-  const {account, password, dataDir, ethApi, privateKey} = swarmSetup;
+  const {account, password, dataDir, ensApi, privateKey} = swarmSetup;
 
   const STARTUP_TIMEOUT_SECS = 3;
   const WAITING_PASSWORD = 0;
@@ -276,13 +276,13 @@ const startProcess = swarmSetup => new Promise((resolve, reject) => {
   const LISTENING = 2;
   const PASSWORD_PROMPT_HOOK = "Passphrase";
   const LISTENING_HOOK = "Swarm HTTP proxy started";
-    
+
   let state = WAITING_PASSWORD;
 
   const swarmProcess = spawn(swarmSetup.binPath, [
     '--bzzaccount', account || privateKey,
     '--datadir', dataDir,
-    '--ethapi', ethApi]);
+    '--ens-api', ensApi]);
 
   const handleProcessOutput = data => {
     if (state === WAITING_PASSWORD && hasString (PASSWORD_PROMPT_HOOK) (data)) {
@@ -345,7 +345,7 @@ const local = swarmSetup => useAPI =>
         .then(() => startProcess(swarmSetup))
         .then(process => useAPI(at("http://localhost:8500")).then(() => process))
         .then(stopProcess));
-      
+
 // String ~> Promise Bool
 //   Returns true if Swarm is available on `url`.
 //   Perfoms a test upload to determine that.
