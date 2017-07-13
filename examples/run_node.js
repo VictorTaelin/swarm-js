@@ -11,7 +11,7 @@ fs.writeFileSync(privateKeyPath, "0123456789abcdef0123456789abcdef0123456789abcd
 const config = {
   privateKey: privateKeyPath,
   dataDir: process.env.HOME + "/Library/Ethereum/testnet",
-  ethApi: process.env.HOME + "/Library/Ethereum/testnet/geth.ipc",
+  ensApi: process.env.HOME + "/Library/Ethereum/testnet/geth.ipc",
   binPath: process.env.HOME + "/.swarm/swarm"
 };
 
