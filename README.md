@@ -1,115 +1,113 @@
 ## Swarm.js
 
-This library allows you to interact with the Swarm network from JavaScript. It:
+This library allows you to interact with the Swarm network from JavaScript.
 
-- Communicates with the network through the HTTP API;
+### Getting started
 
-- Can be used either with a local node or a gateway;
+1. Install
 
-- Solves manifests recursively;
-
-- Enables you to upload/download raw data and directores;
-
-- Enables you to upload/download from disk or from pure JS;
-
-- Works on the browser and on Node.js;
-
-- Can automatically download the Swarm binaries safely and administer the local node for you.
-
-[Live demo!](http://swarm-gateways.net/bzz:/aa9dd4d23e105d0a2e62da38544112468372cd5ad038fbdc9874b1f51b8e76f2/)
-
-## Installing
-
+    ```bash
     npm install swarm-js
+    ```
 
-## Simple usage
+2. Import
 
-The simplest use case for Swarm is uploading/downloading raw data and directories. First, load the lib:
+    ```javascript
+    // Loads the Swarm API pointing to the official gateway
+    const swarm = require("swarm-js").at("http://swarm-gateways.net");
+    ```
 
-```javascript
-// Loads the Swarm API pointing to the official gateway
-const swarm = require("swarm-js").at("http://swarm-gateways.net");
-```
+### Examples
 
-#### Upload raw data
+#### Uploads
 
-To upload raw data, just call `swarm.upload(buffer)`. It returns a promise with the uploaded hash.
+- With JSON:
 
-```javascript
-const file = "test file"; // could also be an Uint8Array of binary data
-swarm.upload(file).then(hash => {
-  console.log("Uploaded file. Address:", hash);
-})
-```
+    - Raw data:
 
-#### Download raw data
+        ```javascript
+        const file = "test file"; // could also be an Uint8Array of binary data
+        swarm.upload(file).then(hash => {
+          console.log("Uploaded file. Address:", hash);
+        })
+        ```
 
-To download raw data, just call `swarm.download(hash)`. It returns a promise with the data buffer.
+    - Directory:
 
-```javascript
-const fileHash = "a5c10851ef054c268a2438f10a21f6efe3dc3dcdcc2ea0e6a1a7a38bf8c91e23";
-swarm.download(fileHash).then(buffer => {
-  console.log("Downloaded file:", buffer.toString());
-});
-```
+        To upload a directory, just call `swarm.upload(directory)`, where directory is an object mapping paths to entries, those containing a mime-type and the data (a buffer).
 
-#### Upload a directory
+        ```javascript
+        const dir = {
+          "/foo.txt": {type: "text/plain", data: "file 0"},
+          "/bar.txt": {type: "text/plain", data: "file 1"}
+        };
+        swarm.upload(dir).then(hash => {
+          console.log("Uploaded directory. Address:", hash);
+        });
+        ```
 
-To upload a directory, just call `swarm.upload(directory)`, where directory is an object mapping paths to entries, those containing a mime-type and the data (a buffer).
+- From disk:
 
-```javascript
-const dir = {
-  "/foo.txt": {type: "text/plain", data: new Buffer("sample file")},
-  "/bar.txt": {type: "text/plain", data: new Buffer("another file")}
-};
-swarm.upload(dir).then(hash => {
-  console.log("Uploaded directory. Address:", hash);
-});
-```
+    - On Node.js:
 
-#### Download a directory
+        ```javascript
+        swarm.upload({
+          path: "/path/to/thing",      // path to data / file / directory
+          kind: "directory",           // could also be "file" or "data"
+          defaultFile: "/index.html"}) // optional, and only for kind === "directory"
+          .then(console.log)
+          .catch(console.log);
+        ```
 
-To dowwload a directory, just call `swarm.download(hash)`. Swarm.js will return a directory instead of a buffer by detecting the existence of a manifest on that hash.
+    - On browsers:
 
-```javascript
-const dirHash = "7e980476df218c05ecfcb0a2ca73597193a34c5a9d6da84d54e295ecd8e0c641";
-swarm.download(dirHash).then(dir => {
-  console.log("Downloaded directory:");
-  for (let path in dir) {
-    console.log("-", path, ":", dir[path].data.toString());
-  }
-});
-```
+        ```javascript
+        // only works inside an event
+        document.onClick = function() {
+          swarm.upload({pick: "file"}) // could also be "directory" or "data"
+            .then(alert);
+        };
+        ```
 
-#### Download a file/directory to disk (on Node.js)
+#### Downloads
 
-```javascript
-swarm.download("DAPP_HASH", "/target/dir")
-  .then(path => console.log(`Downloaded DApp to ${path}.`))
-  .catch(console.log);
-```
+- With JSON:
 
-#### Upload raw data, a file or a directory from disk (on Node.js)
+    - Raw data:
 
-```javascript
-swarm.upload({
-  path: "/path/to/thing",      // path to data / file / directory
-  kind: "directory",           // could also be "file" or "data"
-  defaultFile: "/index.html"}) // optional, and only for kind === "directory"
-  .then(console.log)
-  .catch(console.log);
-```
+        ```javascript
+        const fileHash = "a5c10851ef054c268a2438f10a21f6efe3dc3dcdcc2ea0e6a1a7a38bf8c91e23";
+        swarm.download(fileHash).then(buffer => {
+          console.log("Downloaded file:", buffer.toString());
+        });
+        ```
 
-#### Upload raw data, a file or a directory from disk (on Browser)
+    - Directory:
 
-```javascript
-swarm.upload({pick: "file"}) // could also be "directory" or "data"
-```
+        ```javascript
+        const dirHash = "7e980476df218c05ecfcb0a2ca73597193a34c5a9d6da84d54e295ecd8e0c641";
+        swarm.download(dirHash).then(dir => {
+          console.log("Downloaded directory:");
+          for (let path in dir) {
+            console.log("-", path, ":", dir[path].data.toString());
+          }
+        });
+        ```
 
-## Uploading an Ethereum DApp
+- To disk:
 
-When it comes to decentralized applications (DApps), the Ethereum network is responsible for the back-end logic, while Swarm is responsible for hosting and serving the front-end code. Hosting a DApp on Swarm is as simple as creating a directory with some HTMLs and a default route (the "index.html"). Check out [this example](examples/dapp_upload.js) for how that could be doen.
+    - On Node.js:
 
-## Running a local node
+        ```javascript
+        swarm.download("DAPP_HASH", "/target/dir")
+          .then(path => console.log(`Downloaded DApp to ${path}.`))
+          .catch(console.log);
+        ```
 
-Rather than using a gateway, you might wish to run your own local node. For that, you can either [download/install/run it yourself](http://swarm-guide.readthedocs.io/en/latest/), and then use `require("swarm-js").at("http://localhost:8500")`, or let Swarm.js take care of it. Check out [this example](examples/run_node.js) for how that could be done.
+    - On browser:
+
+        (Just link the Swarm URL.)
+
+### More
+
+For more examples, check out [examples](/examples).
