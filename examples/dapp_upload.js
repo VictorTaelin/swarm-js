@@ -1,21 +1,18 @@
 // This uploads a DApp to the Swarm network *without* using the filesystem.
 // That allows a web application running on the browser to upload any DApp.
-// Outputs the DApp address. In this case, it is:
-// 379d2791624c3e3719bb28f7bfa362cc9c726ec06482b5800c8e3cefaf2b7bcf
-// You can access it at:
-// http://swarm-gateways.net/bzz:/379d2791624c3e3719bb28f7bfa362cc9c726ec06482b5800c8e3cefaf2b7bcf/
+// This will output a hash that can be accessed on Mist & similar.
 
-const swarm = require("./../src/swarm.js").at("http://localhost:8500");
+const swarm = require("./../src/swarm.js").at("http://swarm-gateways.net");
 
 // The contents of index.html.
 const indexHtml = new Buffer(
-`<html>
-  <body>
-    <h3><img src="ethereum_icon.png"/> Swarm.js example DApp!</h3>
-    <p><a href="foo/test_text_1.txt">Test #1</a></p>
-    <p><a href="foo/test_text_2.txt">Test #2</a></p>
-  </body>
-</html>`);
+  `<html>
+    <body>
+      <h3><img src="ethereum_icon.png"/> Swarm.js example DApp!</h3>
+      <p><a href="foo/test_text_1.txt">Test #1</a></p>
+      <p><a href="foo/test_text_2.txt">Test #2</a></p>
+    </body>
+  </html>`);
 
 // For binary data, we can just use a buffer.
 // This is a 16x16 Ethereum icon png.

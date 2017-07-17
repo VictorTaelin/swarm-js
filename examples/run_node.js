@@ -1,3 +1,6 @@
+// THIS IS OUTDATED
+// TODO: update it
+
 const Swarm = require("./../src/swarm.js");
 const fs = require("fs");
 const path = require("path");
@@ -8,7 +11,7 @@ fs.writeFileSync(privateKeyPath, "0123456789abcdef0123456789abcdef0123456789abcd
 
 // To run Swarm locally, you need a running Geth
 // node and an Ethereum account/password
-const config = {
+const swarmSetup = {
   privateKey: privateKeyPath,
   dataDir: process.env.HOME + "/Library/Ethereum/testnet",
   ensApi: process.env.HOME + "/Library/Ethereum/testnet/geth.ipc",
@@ -17,12 +20,12 @@ const config = {
 
 // Magically starts a local Swarm node
 // Downloads binaries if necessary
-Swarm.local(config)(swarm => new Promise((resolve, reject) => {
+Swarm.local(swarmSetup)(swarm => new Promise((resolve, reject) => {
   // Removes the temporary private key file
   fs.unlinkSync(privateKeyPath);
 
   // Uploads data using the local node
-  swarm.upload(new Buffer("test")).then(hash => {
+  swarm.upload("test").then(hash => {
     console.log("Uploaded data. Address:", hash);
 
     // Closes the Swarm process.

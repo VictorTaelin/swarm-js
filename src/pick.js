@@ -1,4 +1,4 @@
-picker = type => () => new Promise((resolve, reject) => {
+const picker = type => () => new Promise((resolve, reject) => {
   const fileLoader = e => {
     const directory = {};
     const totalFiles = e.target.files.length;

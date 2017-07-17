@@ -3,6 +3,7 @@ const pick = require("./pick.js");
 const request = require("xhr-request-promise");
 const downloadUrl = "http://ethereum-mist.s3.amazonaws.com/swarm/";
 const defaultArchives = require("./../archives/archives.json");
+const Buffer = require("buffer").Buffer;
 
 // ∀ a . String -> JSON -> Map String a -o Map String a
 //   Inserts a key/val pair in an object impurely.
@@ -67,7 +68,7 @@ const downloadEntries = swarmUrl => hash => {
 
     // Downloads the initial manifest and then each entry.
     return downloadData(swarmUrl)(hash)
-      .then(text => JSON.parse(text).entries)
+      .then(text => JSON.parse(text.toString()).entries)
       .then(entries => Promise.all(entries.map(downloadEntry)))
       .then(() => routes);
   }
@@ -204,6 +205,10 @@ const upload = swarmUrl => arg => {
       case "file": return uploadFileFromDisk(swarmUrl)(arg.path);
       case "directory": return uploadDirectoryFromDisk(swarmUrl)(arg.defaultFile)(arg.path);
     };
+
+  // Upload UTF-8 string
+  } else if (typeof arg === "string") {
+    return uploadData(swarmUrl)(new Buffer(arg));
 
   // Upload raw data (buffer)
   } else if (arg.length) {
@@ -427,15 +432,4 @@ module.exports = {
   uploadDirectoryFromDisk,
   uploadToManifest,
   pick,
-};
-
-if (typeof window !== "undefined") {
-  const loadLibs = () => {
-    Swarm = module.exports;
-    require("setimmediate");
-    window.Buffer = require("buffer").Buffer
-    window.pick = pick;
-  };
-  loadLibs();
-  setTimeout(loadLibs, 0);
 };
