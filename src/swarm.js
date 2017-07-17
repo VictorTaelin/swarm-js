@@ -124,7 +124,9 @@ const downloadDirectoryToDisk = swarmUrl => hash => dirPath =>
 //   Uploads raw data to Swarm.
 //   Returns a promise with the uploaded hash.
 const uploadData = swarmUrl => data =>
-  request(`${swarmUrl}/bzzr:/`, {body: data, method: "POST"});
+  request(`${swarmUrl}/bzzr:/`, {
+    body: typeof data === "string" ? new Buffer(data) : data,
+    method: "POST"});
 
 // String -> String -> String -> File -> Promise String
 //   Uploads a file to the Swarm manifest at a given hash, under a specific
@@ -431,5 +433,5 @@ module.exports = {
   uploadDirectory,
   uploadDirectoryFromDisk,
   uploadToManifest,
-  pick,
+  pick
 };
