@@ -2,7 +2,7 @@
 // That allows a web application running on the browser to upload any DApp.
 // This will output a hash that can be accessed on Mist & similar.
 
-const swarm = require("./../src/swarm.js").at("http://swarm-gateways.net");
+const swarm = require("./..").at("http://swarm-gateways.net");
 
 // The contents of index.html.
 const indexHtml = new Buffer(

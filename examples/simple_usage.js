@@ -1,4 +1,4 @@
-const swarm = require("./../src/swarm.js").at("http://swarm-gateways.net");
+const swarm = require("./..").at("http://swarm-gateways.net");
 
 (async () => {
 

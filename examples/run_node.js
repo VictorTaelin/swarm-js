@@ -1,7 +1,7 @@
 // THIS IS OUTDATED
 // TODO: update it
 
-const Swarm = require("./../src/swarm.js");
+const Swarm = require("./..");
 const fs = require("fs");
 const path = require("path");
 const privateKeyPath = path.join(process.cwd(), "swarmPrivateKey");
