@@ -1,4 +1,4 @@
-const mimetype = require('mimetype');
+const mimetype = require('mime-types');
 const pick = require("./pick.js");
 const request = require("xhr-request-promise");
 const downloadUrl = "http://ethereum-mist.s3.amazonaws.com/swarm/";

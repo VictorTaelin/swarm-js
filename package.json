@@ -1,6 +1,6 @@
 {
   "name": "swarm-js",
-  "version": "0.1.33",
+  "version": "0.1.34",
   "description": "Swarm tools for JavaScript.",
   "main": "lib/api-node.js",
   "browser": "lib/api-browser.js",
@@ -14,7 +14,7 @@
   "author": "MaiaVictor",
   "license": "MIT",
   "repository": {
-    "type": "git",  
+    "type": "git",
     "url": "https://github.com/maiavictor/swarm-js"
   },
   "dependencies": {
@@ -22,7 +22,7 @@
     "decompress": "^4.0.0",
     "fs-extra": "^2.1.2",
     "fs-promise": "^2.0.0",
-    "mimetype": "0.0.8",
+    "mime-types": "^2.1.16",
     "mkdirp-promise": "^5.0.1",
     "mock-fs": "^4.1.0",
     "setimmediate": "^1.0.5",
