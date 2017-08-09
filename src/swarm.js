@@ -1,4 +1,5 @@
 const mimetype = require('mime-types');
+const hash = require("./swarm-hash.js");
 const pick = require("./pick.js");
 const request = require("xhr-request-promise");
 const downloadUrl = "http://ethereum-mist.s3.amazonaws.com/swarm/";
@@ -438,7 +439,8 @@ module.exports = ({fsp, files, os, path, child_process}) => {
     uploadDirectory,
     uploadDirectoryFromDisk,
     uploadToManifest,
-    pick
+    pick,
+    hash
   };
 
 };
