@@ -1,16 +1,21 @@
-const mimetype = require('mime-types');
-const hash = require("./swarm-hash.js");
-const pick = require("./pick.js");
-const request = require("xhr-request-promise");
-const downloadUrl = "http://ethereum-mist.s3.amazonaws.com/swarm/";
-const defaultArchives = require("./../archives/archives.json");
-const Buffer = require("buffer").Buffer;
-
 // TODO: this is a temporary fix to hide those libraries from the browser. A
 // slightly better long-term solution would be to split this file into two,
 // separating the functions that are used on Node.js from the functions that
 // are used only on the browser.
-module.exports = ({fsp, files, os, path, child_process}) => {
+module.exports = ({
+  fsp,
+  files,
+  os,
+  path,
+  child_process,
+  mimetype,
+  defaultArchives,
+  request,
+  downloadUrl,
+  bytes,
+  hash,
+  pick
+}) => {
 
   // ∀ a . String -> JSON -> Map String a -o Map String a
   //   Inserts a key/val pair in an object impurely.
@@ -37,18 +42,36 @@ module.exports = ({fsp, files, os, path, child_process}) => {
     return map;
   };
 
+  // ∀ a . [a] -> [a] -> Bool
+  const equals = a => b => {
+    if (a.length !== b.length) {
+      return false;
+    } else {
+      for (let i = 0, l = a.length; i < a; ++i) {
+        if (a[i] !== b[i]) return false;
+      }
+    }
+    return true;
+  }
+
   // String -> String -> String
   const rawUrl = swarmUrl => hash =>
     `${swarmUrl}/bzzr:/${hash}`
 
-  // String -> String -> Promise Buffer
+  // String -> String -> Promise Uint8Array
   //   Gets the raw contents of a Swarm hash address.
   const downloadData = swarmUrl => hash =>
     request(rawUrl(swarmUrl)(hash), {responseType: "arraybuffer"})
-      .then(arrayBuffer => new Buffer(arrayBuffer));
+      .then(arrayBuffer => {
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const error404 = [52,48,52,32,112,97,103,101,32,110,111,116,32,102,111,117,110,100,10];
+        if (equals(uint8Array)(error404))
+          throw "Error 404.";
+        return uint8Array;
+      });
 
   // type Entry = {"type": String, "hash": String}
-  // type File = {"type": String, "data": Buffer}
+  // type File = {"type": String, "data": Uint8Array}
 
   // String -> String -> Promise (Map String Entry)
   //   Solves the manifest of a Swarm address recursively.
@@ -75,7 +98,7 @@ module.exports = ({fsp, files, os, path, child_process}) => {
 
       // Downloads the initial manifest and then each entry.
       return downloadData(swarmUrl)(hash)
-        .then(text => JSON.parse(text.toString()).entries)
+        .then(text => JSON.parse(toString(text)).entries)
         .then(entries => Promise.all(entries.map(downloadEntry)))
         .then(() => routes);
     }
@@ -127,12 +150,12 @@ module.exports = ({fsp, files, os, path, child_process}) => {
         return Promise.all(downloads).then(() => dirPath);
       });
 
-  // String -> Buffer -> Promise String
+  // String -> Uint8Array -> Promise String
   //   Uploads raw data to Swarm.
   //   Returns a promise with the uploaded hash.
   const uploadData = swarmUrl => data =>
     request(`${swarmUrl}/bzzr:/`, {
-      body: typeof data === "string" ? new Buffer(data) : data,
+      body: typeof data === "string" ? fromString(data) : data,
       method: "POST"});
 
   // String -> String -> String -> File -> Promise String
@@ -149,12 +172,18 @@ module.exports = ({fsp, files, os, path, child_process}) => {
         headers: {"Content-Type": file.type},
         body: file.data};
       return request(url, opt)
+        .then(response => {
+          if (response.indexOf("error") !== -1) {
+            throw response;
+          }
+          return response;
+        })
         .catch(e => n > 0 && attempt(n-1));
     };
     return attempt(3);
   };
 
-  // String -> {type: String, data: Buffer} -> Promise String
+  // String -> {type: String, data: Uint8Array} -> Promise String
   const uploadFile = swarmUrl => file =>
     uploadDirectory(swarmUrl)({"": file});
 
@@ -215,12 +244,8 @@ module.exports = ({fsp, files, os, path, child_process}) => {
         case "directory": return uploadDirectoryFromDisk(swarmUrl)(arg.defaultFile)(arg.path);
       };
 
-    // Upload UTF-8 string
-    } else if (typeof arg === "string") {
-      return uploadData(swarmUrl)(new Buffer(arg));
-
-    // Upload raw data (buffer)
-    } else if (arg.length) {
+    // Upload UTF-8 string or raw data (buffer)
+    } else if (arg.length || typeof arg === "string") {
       return uploadData(swarmUrl)(arg);
 
     // Upload directory with JSON
@@ -231,7 +256,7 @@ module.exports = ({fsp, files, os, path, child_process}) => {
     return Promise.reject(new Error("Bad arguments"));
   }
 
-  // String -> String -> Nullable String -> Promise (String | Buffer | Map String Buffer)
+  // String -> String -> Nullable String -> Promise (String | Uint8Array | Map String Uint8Array)
   //   Simplified multi-type download which calls the correct function based on
   //   the type of the argument given, and on whether the Swwarm address has a
   //   directory or a file.
@@ -377,8 +402,13 @@ module.exports = ({fsp, files, os, path, child_process}) => {
   //   TODO: improve this?
   const isDirectory = swarmUrl => hash =>
     downloadData(swarmUrl)(hash)
-      .then(data => !!JSON.parse(data.toString()).entries)
-      .catch(() => false);
+      .then(data => {
+        try {
+          return !!JSON.parse(toString(data)).entries;
+        } catch (e) {
+          return false;
+        }
+      });
 
   // Uncurries a function; used to allow the f(x,y,z) style on exports.
   const uncurry = f => (a,b,c,d,e) => {
@@ -394,6 +424,14 @@ module.exports = ({fsp, files, os, path, child_process}) => {
   // () -> Promise Bool
   //   Not sure how to mock Swarm to test it properly. Ideas?
   const test = () => Promise.resolve(true);
+
+  // Uint8Array -> String
+  const toString = uint8Array =>
+    bytes.toString(bytes.fromUint8Array(uint8Array));
+
+  // String -> Uint8Array
+  const fromString = string =>
+    bytes.toUint8Array(bytes.fromString(string));
 
   // String -> SwarmAPI
   //   Fixes the `swarmUrl`, returning an API where you don't have to pass it.
@@ -415,6 +453,9 @@ module.exports = ({fsp, files, os, path, child_process}) => {
     uploadDirectoryFromDisk: uncurry(uploadDirectoryFromDisk(swarmUrl)),
     uploadToManifest: uncurry(uploadToManifest(swarmUrl)),
     pick: pick,
+    hash: hash,
+    fromString: fromString,
+    toString: toString
   });
 
   return {
@@ -440,7 +481,9 @@ module.exports = ({fsp, files, os, path, child_process}) => {
     uploadDirectoryFromDisk,
     uploadToManifest,
     pick,
-    hash
+    hash,
+    fromString,
+    toString
   };
 
 };

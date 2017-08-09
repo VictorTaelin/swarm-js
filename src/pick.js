@@ -6,7 +6,7 @@ const picker = type => () => new Promise((resolve, reject) => {
     [].map.call(e.target.files, file => {
       const reader = new FileReader();
       reader.onload = e => {
-        const data = new Buffer(e.target.result);
+        const data = new Uint8Array(e.target.result);
         if (type === "directory") {
           const path = file.webkitRelativePath;
           directory[path.slice(path.indexOf("/")+1)] = {

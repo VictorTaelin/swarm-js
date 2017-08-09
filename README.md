@@ -34,7 +34,7 @@ This library allows you to interact with the Swarm network from JavaScript.
 
     - Directory:
 
-        To upload a directory, just call `swarm.upload(directory)`, where directory is an object mapping paths to entries, those containing a mime-type and the data (a buffer).
+        To upload a directory, just call `swarm.upload(directory)`, where directory is an object mapping paths to entries, those containing a mime-type and the data (Uint8Array or UTF-8 String).
 
         ```javascript
         const dir = {
@@ -77,8 +77,8 @@ This library allows you to interact with the Swarm network from JavaScript.
 
         ```javascript
         const fileHash = "a5c10851ef054c268a2438f10a21f6efe3dc3dcdcc2ea0e6a1a7a38bf8c91e23";
-        swarm.download(fileHash).then(buffer => {
-          console.log("Downloaded file:", buffer.toString());
+        swarm.download(fileHash).then(array => {
+          console.log("Downloaded file:", swarm.toString(array));
         });
         ```
 
@@ -107,6 +107,15 @@ This library allows you to interact with the Swarm network from JavaScript.
     - On browser:
 
         (Just link the Swarm URL.)
+
+#### SwarmHash
+
+```javascript
+console.log(swarm.hash("unicode string áéíóú λ"));
+console.log(swarm.hash("0x41414141"));
+console.log(swarm.hash([65, 65, 65, 65]));
+console.log(swarm.hash(new Uint8Array([65, 65, 65, 65])));
+```
 
 ### More
 

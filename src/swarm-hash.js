@@ -3,13 +3,20 @@
 const keccak = require("eth-lib/lib/hash").keccak256;
 const Bytes = require("eth-lib/lib/bytes");
 
-const swarmHashBlock = (length, data) =>
-  keccak(Bytes.flatten([
-    Bytes.reverse(Bytes.pad(6, Bytes.fromNumber(length))),
-    "0x0000",
-    data]));
+const swarmHashBlock = (length, data) => {
+  const lengthEncoded = Bytes.reverse(Bytes.pad(6, Bytes.fromNumber(length)));
+  const bytes = Bytes.flatten([lengthEncoded, "0x0000", data]);
+  return keccak(bytes).slice(2);
+};
 
-const swarmHash = (data) => {
+// (Bytes | Uint8Array | String) -> String
+const swarmHash = data => {
+  if (typeof data === "string" && data.slice(0,2) !== "0x") {
+    data = Bytes.fromString(data);
+  } else if (typeof data !== "string" && data.length !== undefined) {
+    data = Bytes.fromUint8Array(data);
+  }
+
   const length = Bytes.length(data);
 
   if (length <= 4096) {
