@@ -29,7 +29,7 @@
     "mkdirp-promise": "^5.0.1",
     "mock-fs": "^4.1.0",
     "setimmediate": "^1.0.5",
-    "tar.gz": "^1.0.5",
+    "tar": "^4.0.2",
     "xhr-request-promise": "^0.1.2"
   },
   "devDependencies": {
