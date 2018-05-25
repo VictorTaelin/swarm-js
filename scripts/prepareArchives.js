@@ -2,7 +2,6 @@ const Q = require("bluebird");
 const decompress = require("decompress");
 const files = require("./../src/files.js");
 const fs = require("fs-extra");
-const fsp = require("fs-promise");
 const got = require("got");
 const path = require("path");
 const targz = require("tar.gz");
@@ -11,7 +10,7 @@ const xml = require("xml2js");
 // Downloads list of Geth releases
 console.log("Retrieving list of Geth releases from https://gethstore.blob.core.windows.net.");
 got("https://gethstore.blob.core.windows.net/builds?restype=container&comp=list")
-  
+
   // Parses XML
   .then((res) => new Q((resolve, reject) => {
     console.log("Parsing XML.");
@@ -76,9 +75,9 @@ got("https://gethstore.blob.core.windows.net/builds?restype=container&comp=list"
         return files.download(bin.gethArchiveUrl)(bin.gethArchivePath)
           .then(path => (console.log("Downloaded " + path + "."), path))
           .then(path => decompress(path, "tmp_downloads"))
-          .then(() => !fs.existsSync(bin.swarmBinaryDir) && fsp.mkdir(bin.swarmBinaryDir))
+          .then(() => !fs.existsSync(bin.swarmBinaryDir) && fs.mkdir(bin.swarmBinaryDir))
           .then(() => files.search(/swarm(.exe|)$/)(bin.gethFilesPath))
-          .then(([swarmPath]) => fsp.rename(swarmPath, bin.swarmBinaryPath))
+          .then(([swarmPath]) => fs.rename(swarmPath, bin.swarmBinaryPath))
           .then(() => files.hash("md5")(bin.swarmBinaryPath))
           .then(binaryMD5 => archive.binaryMD5 = binaryMD5)
           .then(() => targz().compress(bin.swarmBinaryDir, bin.swarmArchivePath))
