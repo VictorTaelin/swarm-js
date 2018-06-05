@@ -61,14 +61,17 @@ module.exports = ({
   // String -> String -> Promise Uint8Array
   //   Gets the raw contents of a Swarm hash address.
   const downloadData = swarmUrl => hash =>
-    request(rawUrl(swarmUrl)(hash), {responseType: "arraybuffer"})
-      .then(arrayBuffer => {
-        const uint8Array = new Uint8Array(arrayBuffer);
-        const error404 = [52,48,52,32,112,97,103,101,32,110,111,116,32,102,111,117,110,100,10];
-        if (equals(uint8Array)(error404))
-          throw "Error 404.";
-        return uint8Array;
-      });
+    new Promise((resolve, reject) => {
+      request(rawUrl(swarmUrl)(hash), {responseType: "arraybuffer"}, (err, arrayBuffer, response) => {
+        if (err) {
+          return reject(err);
+        }
+        if (response.statusCode >= 400) {
+          return reject(new Error(`Error ${response.statusCode}.`));
+        }
+        return resolve(new Uint8Array(arrayBuffer));
+      })
+    });
 
   // type Entry = {"type": String, "hash": String}
   // type File = {"type": String, "data": Uint8Array}
@@ -154,9 +157,18 @@ module.exports = ({
   //   Uploads raw data to Swarm.
   //   Returns a promise with the uploaded hash.
   const uploadData = swarmUrl => data =>
-    request(`${swarmUrl}/bzzr:/`, {
-      body: typeof data === "string" ? fromString(data) : data,
-      method: "POST"});
+    new Promise((resolve, reject) => {
+      const params = {
+        body: typeof data === "string" ? fromString(data) : data,
+        method: "POST"
+      };
+      request(`${swarmUrl}/bzzr:/`, params, (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(data);
+      });
+    });
 
   // String -> String -> String -> File -> Promise String
   //   Uploads a file to the Swarm manifest at a given hash, under a specific
@@ -171,14 +183,17 @@ module.exports = ({
         method: "PUT",
         headers: {"Content-Type": file.type},
         body: file.data};
-      return request(url, opt)
-        .then(response => {
-          if (response.indexOf("error") !== -1) {
-            throw response;
+      return new Promise((resolve, reject) => {
+        request(url, opt, (err, data) => {
+          if (err) {
+            return reject(err);
           }
-          return response;
-        })
-        .catch(e => n > 0 && attempt(n-1));
+          if (data.indexOf("error") !== -1) {
+            return reject(data);
+          }
+          return data;
+        });
+      }).catch(e => n > 0 && attempt(n-1));
     };
     return attempt(3);
   };

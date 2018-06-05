@@ -29,7 +29,7 @@
     "mock-fs": "^4.1.0",
     "setimmediate": "^1.0.5",
     "tar.gz": "^1.0.5",
-    "xhr-request-promise": "^0.1.2"
+    "xhr-request": "^1.0.1"
   },
   "devDependencies": {
     "babel-preset-es2015": "^6.24.1",
