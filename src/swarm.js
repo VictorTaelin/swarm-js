@@ -56,7 +56,7 @@ module.exports = ({
 
   // String -> String -> String
   const rawUrl = swarmUrl => hash =>
-    `${swarmUrl}/bzzr:/${hash}`
+    `${swarmUrl}/bzz-raw:/${hash}`
 
   // String -> String -> Promise Uint8Array
   //   Gets the raw contents of a Swarm hash address.
@@ -154,7 +154,7 @@ module.exports = ({
   //   Uploads raw data to Swarm.
   //   Returns a promise with the uploaded hash.
   const uploadData = swarmUrl => data =>
-    request(`${swarmUrl}/bzzr:/`, {
+    request(`${swarmUrl}/bzz-raw:/`, {
       body: typeof data === "string" ? fromString(data) : data,
       method: "POST"});
 
