@@ -6,8 +6,7 @@
 const Q = require("bluebird");
 const assert = require("assert");
 const crypto = require("crypto");
-const fs = require("fs");
-const fsp = require("fs-promise");
+const fs = require("fs-extra");
 const got = require("got");
 const mkdirp = require("mkdirp-promise");
 const path = require("path");
@@ -77,13 +76,13 @@ const extract = fromPath => toPath =>
 //   Reads a file as an UTF8 string.
 //   Returns a promise containing that string.
 const readUTF8 = path =>
-  fsp.readFile (path, {encoding: "utf8"});
+  fs.readFile (path, {encoding: "utf8"});
 
 // String ~> Promise Bool
 const isDirectory = path =>
-  fsp.exists(path)
+  fs.exists(path)
     .then(assert)
-    .then(() => fsp.lstat(path))
+    .then(() => fs.lstat(path))
     .then(stats => stats.isDirectory())
     .catch(() => false);
 
@@ -94,7 +93,7 @@ const directoryTree = dirPath => {
     isDirectory(dirPath).then(isDir => {
       if (isDir) {
         const searchOnDir = dir => search (path.join(dirPath, dir));
-        return Q.all(Q.map(fsp.readdir(dirPath), searchOnDir));
+        return Q.all(Q.map(fs.readdir(dirPath), searchOnDir));
       } else {
         paths.push(dirPath);
       };
@@ -120,15 +119,15 @@ const safeDownloadArchived = url => archiveHash => fileHash => filePath => {
   const promise = Q.resolve(mkdirp(archiveDir))
     .then(() => checksum (fileHash) (filePath))
     .then(() => filePath)
-    .catch(() => fsp.exists(archiveDir)
-      .then(exists => !exists ? fsp.mkdir(archiveDir) : null)
+    .catch(() => fs.exists(archiveDir)
+      .then(exists => !exists ? fs.mkdir(archiveDir) : null)
       .then(() => download (url)(archivePath).onData(promise.onDataCallback))
       .then(() => hash("md5")(archivePath))
       .then(() => archiveHash ? checksum(archiveHash)(archivePath) : null)
       .then(() => extract (archivePath) (archiveDir))
       .then(() => search (new RegExp(fileName+"$")) (archiveDir))
-      .then(fp => fsp.rename (fp[0], filePath))
-      .then(() => fsp.unlink (archivePath))
+      .then(fp => fs.rename (fp[0], filePath))
+      .then(() => fs.unlink (archivePath))
       .then(() => fileHash ? checksum(fileHash)(filePath) : null)
       .then(() => filePath));
   promise.onDataCallback = () => {};
