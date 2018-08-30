@@ -10,10 +10,7 @@ const fs = require("fs-extra");
 const got = require("got");
 const mkdirp = require("mkdirp-promise");
 const path = require("path");
-
-// TODO: this lib takes 0.5s to load! Must be replaced asap.
-// Perhaps just use the unix `tar` command (cross platform?)
-const targz = require("tar.gz");
+const tar = require("tar");
 
 // String -> String ~> Promise String
 //   Downloads a file from an url to a path.
@@ -68,8 +65,7 @@ const downloadAndCheck = url => path => fileHash =>
 // String -> String ~> Promise String
 //   TODO: work for zip and other types
 const extract = fromPath => toPath =>
-  targz()
-    .extract(fromPath, toPath)
+  tar.x(fromPath, toPath)
     .then(() => toPath);
 
 // String ~> Promise String

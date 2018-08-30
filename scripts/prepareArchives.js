@@ -4,7 +4,7 @@ const files = require("./../src/files.js");
 const fs = require("fs-extra");
 const got = require("got");
 const path = require("path");
-const targz = require("tar.gz");
+const tar = require("tar");
 const xml = require("xml2js");
 
 // Downloads list of Geth releases
@@ -80,7 +80,7 @@ got("https://gethstore.blob.core.windows.net/builds?restype=container&comp=list"
           .then(([swarmPath]) => fs.rename(swarmPath, bin.swarmBinaryPath))
           .then(() => files.hash("md5")(bin.swarmBinaryPath))
           .then(binaryMD5 => archive.binaryMD5 = binaryMD5)
-          .then(() => targz().compress(bin.swarmBinaryDir, bin.swarmArchivePath))
+          .then(() => tar.c({gzip: true, file: bin.swarmArchivePath}, bin.swarmBinaryDir))
           .then(() => files.hash("md5")(bin.swarmArchivePath))
           .then(archiveMD5 => archive.archiveMD5 = archiveMD5)
           .catch(e => console.log(e));
