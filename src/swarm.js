@@ -3,7 +3,7 @@
 // separating the functions that are used on Node.js from the functions that
 // are used only on the browser.
 module.exports = ({
-  fsp,
+  fs,
   files,
   os,
   path,
@@ -189,7 +189,7 @@ module.exports = ({
 
   // String -> String -> Promise String
   const uploadFileFromDisk = swarmUrl => filePath =>
-    fsp.readFile(filePath)
+    fs.readFile(filePath)
       .then(data => uploadFile(swarmUrl)({type: mimetype.lookup(filePath), data: data}));
 
   // String -> Map String File -> Promise String
@@ -206,13 +206,13 @@ module.exports = ({
 
   // String -> Promise String
   const uploadDataFromDisk = swarmUrl => filePath =>
-    fsp.readFile(filePath)
+    fs.readFile(filePath)
       .then(uploadData(swarmUrl));
 
   // String -> Nullable String -> String -> Promise String
   const uploadDirectoryFromDisk = swarmUrl => defaultPath => dirPath =>
     files.directoryTree(dirPath)
-      .then(fullPaths => Promise.all(fullPaths.map(path => fsp.readFile(path))).then(datas => {
+      .then(fullPaths => Promise.all(fullPaths.map(path => fs.readFile(path))).then(datas => {
         const paths = fullPaths.map(path => path.slice(dirPath.length));
         const types = fullPaths.map(path => mimetype.lookup(path) || "text/plain");
         return toMap (paths) (datas.map((data, i) => ({type: types[i], data: data})));

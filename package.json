@@ -5,8 +5,8 @@
   "main": "lib/api-node.js",
   "browser": "lib/api-browser.js",
   "scripts": {
-    "bundle": "browserify -d lib/swarm.js > examples/example_dapp_uploader/swarm.min.js",
-    "minify": "ccjs examples/example_dapp_uploader/swarm.min.js > examples/example_dapp_uploader/swarm.min.js_; mv examples/example_dapp_uploader/swarm.min.js_ examples/example_dapp_uploader/swarm.min.js",
+    "bundle": "browserify -d lib/swarm.js > examples/uploader_dapp/swarm.min.js",
+    "minify": "ccjs examples/uploader_dapp/swarm.min.js > examples/uploader_dapp/swarm.min.js_; mv examples/uploader_dapp/swarm.min.js_ examples/uploader_dapp/swarm.min.js",
     "build": "npm run bundle; npm run minify",
     "babel": "babel src --out-dir=lib",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "bluebird": "^3.5.0",
+    "browserify": "^16.2.2",
     "buffer": "^5.0.5",
     "decompress": "^4.0.0",
     "eth-lib": "^0.1.26",

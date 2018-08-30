@@ -1,4 +1,4 @@
-const fsp = require("fs-promise");
+const fs = require("fs-extra");
 const files = require("./files.js");
 const os = require("os");
 const path = require("path");
@@ -27,7 +27,7 @@ const request = (url, params) => {
 };
 
 module.exports = swarm({
-  fsp,
+  fs,
   files,
   os,
   path,
