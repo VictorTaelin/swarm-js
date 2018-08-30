@@ -33,7 +33,8 @@
     "xhr-request-promise": "^0.1.2"
   },
   "devDependencies": {
+    "babel-cli": "^6.24.1",
     "babel-preset-es2015": "^6.24.1",
-    "babel-cli": "^6.24.1"
+    "xml2js": "^0.4.19"
   }
 }
