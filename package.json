@@ -5,10 +5,9 @@
   "main": "lib/api-node.js",
   "browser": "lib/api-browser.js",
   "scripts": {
-    "bundle": "browserify -d lib/swarm.js > examples/uploader_dapp/swarm.min.js",
-    "minify": "ccjs examples/uploader_dapp/swarm.min.js > examples/uploader_dapp/swarm.min.js_; mv examples/uploader_dapp/swarm.min.js_ examples/uploader_dapp/swarm.min.js",
-    "build": "npm run bundle; npm run minify",
+    "build": "npm run babel; npm run bundle",
     "babel": "babel src --out-dir=lib",
+    "bundle": "browserify -d lib/swarm.js > examples/uploader_dapp/swarm.min.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "MaiaVictor",
