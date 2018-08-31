@@ -47,7 +47,7 @@ module.exports = ({
     if (a.length !== b.length) {
       return false;
     } else {
-      for (let i = 0, l = a.length; i < a; ++i) {
+      for (let i = 0, l = a.length; i < l; ++i) {
         if (a[i] !== b[i]) return false;
       }
     }
