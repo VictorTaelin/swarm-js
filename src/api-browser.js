@@ -1,6 +1,6 @@
 const unavailable = () => { throw "This swarm.js function isn't available on the browser."; }
 
-const fsp = {readFile: unavailable};
+const fs = {readFile: unavailable};
 const files = {download: unavailable, safeDownloadArchived: unavailable, directoryTree: unavailable};
 const os = {platform: unavailable, arch: unavailable};
 const path = {join: unavailable, slice: unavailable};
@@ -15,7 +15,7 @@ const pick = require("./pick.js");
 const swarm = require("./swarm");
 
 module.exports = swarm({
-  fsp,
+  fs,
   files,
   os,
   path,

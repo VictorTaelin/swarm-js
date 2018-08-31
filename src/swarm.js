@@ -3,7 +3,7 @@
 // separating the functions that are used on Node.js from the functions that
 // are used only on the browser.
 module.exports = ({
-  fsp,
+  fs,
   files,
   os,
   path,
@@ -47,7 +47,7 @@ module.exports = ({
     if (a.length !== b.length) {
       return false;
     } else {
-      for (let i = 0, l = a.length; i < a; ++i) {
+      for (let i = 0, l = a.length; i < l; ++i) {
         if (a[i] !== b[i]) return false;
       }
     }
@@ -56,7 +56,7 @@ module.exports = ({
 
   // String -> String -> String
   const rawUrl = swarmUrl => hash =>
-    `${swarmUrl}/bzzr:/${hash}`
+    `${swarmUrl}/bzz-raw:/${hash}`
 
   // String -> String -> Promise Uint8Array
   //   Gets the raw contents of a Swarm hash address.
@@ -162,7 +162,7 @@ module.exports = ({
         body: typeof data === "string" ? fromString(data) : data,
         method: "POST"
       };
-      request(`${swarmUrl}/bzzr:/`, params, (err, data) => {
+      request(`${swarmUrl}/bzz-raw:/`, params, (err, data) => {
         if (err) {
           return reject(err);
         }
@@ -204,7 +204,7 @@ module.exports = ({
 
   // String -> String -> Promise String
   const uploadFileFromDisk = swarmUrl => filePath =>
-    fsp.readFile(filePath)
+    fs.readFile(filePath)
       .then(data => uploadFile(swarmUrl)({type: mimetype.lookup(filePath), data: data}));
 
   // String -> Map String File -> Promise String
@@ -221,13 +221,13 @@ module.exports = ({
 
   // String -> Promise String
   const uploadDataFromDisk = swarmUrl => filePath =>
-    fsp.readFile(filePath)
+    fs.readFile(filePath)
       .then(uploadData(swarmUrl));
 
   // String -> Nullable String -> String -> Promise String
   const uploadDirectoryFromDisk = swarmUrl => defaultPath => dirPath =>
     files.directoryTree(dirPath)
-      .then(fullPaths => Promise.all(fullPaths.map(path => fsp.readFile(path))).then(datas => {
+      .then(fullPaths => Promise.all(fullPaths.map(path => fs.readFile(path))).then(datas => {
         const paths = fullPaths.map(path => path.slice(dirPath.length));
         const types = fullPaths.map(path => mimetype.lookup(path) || "text/plain");
         return toMap (paths) (datas.map((data, i) => ({type: types[i], data: data})));
