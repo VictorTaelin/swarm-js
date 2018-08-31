@@ -27,7 +27,7 @@
     "mock-fs": "^4.1.0",
     "setimmediate": "^1.0.5",
     "tar": "^4.0.2",
-    "xhr-request-promise": "^0.1.2"
+    "xhr-request": "^1.0.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
