@@ -191,7 +191,7 @@ module.exports = ({
           if (data.indexOf("error") !== -1) {
             return reject(data);
           }
-          return data;
+          return resolve(data);
         });
       }).catch(e => n > 0 && attempt(n-1));
     };
