@@ -26,7 +26,7 @@
     "mkdirp-promise": "^5.0.1",
     "mock-fs": "^4.1.0",
     "setimmediate": "^1.0.5",
-    "tar": "^4.0.2",
+    "tar": "^4.4.8",
     "xhr-request": "^1.0.1"
   },
   "devDependencies": {
