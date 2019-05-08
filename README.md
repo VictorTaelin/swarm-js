@@ -1,7 +1,9 @@
+## Disclaimer
+
+**This library isn't activelly maintained as I moved on to other things. If you'd like to maintain it, please let me know. For now, I think I can point to Erebos: https://erebos.js.org/**
+
+
 ## Swarm.js
-
-**Disclaimer: this library isn't activelly maintained as I moved on to other things. If you'd like to maintain it, please let me know. For now, I think I can point to Erebos: https://erebos.js.org/**
-
 
 This library allows you to interact with the Swarm network from JavaScript.
 
