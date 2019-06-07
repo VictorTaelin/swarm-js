@@ -19,20 +19,20 @@
     "bluebird": "^3.5.0",
     "buffer": "^5.0.5",
     "decompress": "^4.0.0",
-    "eth-lib": "^0.1.26",
+    "eth-lib": "^0.2.8",
     "fs-extra": "^4.0.2",
     "got": "^7.1.0",
     "mime-types": "^2.1.16",
     "mkdirp-promise": "^5.0.1",
     "mock-fs": "^4.1.0",
     "setimmediate": "^1.0.5",
-    "tar": "^4.0.2",
-    "xhr-request": "^1.0.1"
+    "tar": "^4.4.8",
+    "xhr-request": "^1.1.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.0.0",
-    "@babel/core": "^7.0.0",
-    "@babel/preset-env": "^7.0.0",
+    "@babel/cli": "^7.4.3",
+    "@babel/core": "^7.4.3",
+    "@babel/preset-env": "^7.4.3",
     "xml2js": "^0.4.19"
   }
 }
